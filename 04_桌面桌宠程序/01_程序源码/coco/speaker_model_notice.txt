@@ -1,0 +1,14 @@
+Nova 本地声纹模型说明
+
+模型文件：3dspeaker_speech_campplus_sv_zh-cn_16k-common.onnx
+来源（官方 sherpa-onnx speaker-recongition-models release）：
+https://github.com/k2-fsa/sherpa-onnx/releases/tag/speaker-recongition-models
+模型卡：https://www.modelscope.cn/models/iic/speech_campplus_sv_zh-cn_16k-common/s
+下载地址：
+https://github.com/k2-fsa/sherpa-onnx/releases/download/speaker-recongition-models/3dspeaker_speech_campplus_sv_zh-cn_16k-common.onnx
+SHA-256：F682B514C05D947EE3FA91CD6EC6C5C7543479A128373FA29B1FAEDCCD21FD11
+
+代码运行库 sherpa-onnx 与该模型按各自上游说明使用 Apache License 2.0。
+模型卡标注：Apache License 2.0。分发前应保留本说明、上游 LICENSE/NOTICE，
+并按上游版本与许可要求复核。该模型只用于本机可选唤醒声纹二次校验，
+不构成身份认证、反重放或高风险操作授权。

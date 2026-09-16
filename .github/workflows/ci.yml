@@ -1,0 +1,50 @@
+name: tests
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  unit-and-smoke:
+    name: Windows tests
+    runs-on: windows-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+          cache: pip
+          cache-dependency-path: 04_桌面桌宠程序/01_程序源码/requirements.txt
+
+      - name: Install runtime dependencies
+        working-directory: 04_桌面桌宠程序/01_程序源码
+        run: python -m pip install -r requirements.txt
+
+      - name: Run unit tests
+        working-directory: 04_桌面桌宠程序/01_程序源码
+        run: python -m unittest discover -s tests -p "test_*.py"
+
+      - name: Run UI smoke tests
+        working-directory: 04_桌面桌宠程序/01_程序源码
+        env:
+          QT_QPA_PLATFORM: offscreen
+          QTWEBENGINE_CHROMIUM_FLAGS: --disable-gpu
+        run: |
+          python -m tests.assistant_ui_smoke
+          python -m tests.ui_smoke
+
+      - name: Check JavaScript syntax
+        working-directory: 04_桌面桌宠程序/01_程序源码
+        run: |
+          node --check coco/web/nova_states.js
+          node --check coco/web/nova_renderer.js
+          node --check coco/web/nova_bridge.js

@@ -1,0 +1,55 @@
+# Python and test output
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
+
+# Local configuration, credentials and runtime state
+.env
+.env.*
+*.sqlite
+*.sqlite3
+*.db
+*.log
+*.dpapi
+*.pem
+*.key
+*.p12
+*.pfx
+credentials*.json
+secrets*.json
+
+# Private project data
+/01_Coco原始素材/
+/02_整理后的素材/
+/03_标注与Coco画像/
+/05_记忆与状态数据/
+/06_视频行为分析/
+/07_实体机器狗资料/
+/08_项目管理文档/
+/09_备份与归档/
+/10_临时文件_确认后可删除/
+
+# Local model files are downloaded separately and are never committed.
+/04_桌面桌宠程序/06_语音模型/*
+!/04_桌面桌宠程序/06_语音模型/README.md
+
+# Generated packaging output
+**/build/
+**/dist/
+**/build_*/
+**/temp/
+**/tmp/
+**/04_桌面桌宠程序/05_可运行版本/NovaOrb/
+*.zip
+*.7z
+*.tar
+
+# OS/editor files
+Thumbs.db
+.DS_Store
+.idea/
+.vscode/

@@ -1,0 +1,17 @@
+{
+  "version": "20260915-nova-orb",
+  "status": "public_nova_orb_profile",
+  "appearance": {
+    "body": "#111318",
+    "accent": "#59A8FF",
+    "success": "#65D7B0",
+    "warning": "#F1B45B",
+    "notes": "Nova Orb uses the authored offline SVG renderer. This profile contains no photo, video, or personal-character reference."
+  },
+  "rules": {
+    "wait_for_food_above_fullness": 65,
+    "belly_rub_probability": 0.35,
+    "wag_on_call_probability": 0.65,
+    "quiet_by_default": true
+  }
+}

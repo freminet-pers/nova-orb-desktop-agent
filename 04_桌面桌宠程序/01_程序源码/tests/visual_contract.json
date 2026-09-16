@@ -1,0 +1,86 @@
+{
+  "contract_version": 1,
+  "renderer_bridge": {
+    "python_methods": [
+      "set_state",
+      "sync_state",
+      "enter",
+      "react",
+      "gaze",
+      "clear_gaze",
+      "scene",
+      "drag_release"
+    ],
+    "javascript_methods": [
+      "setState",
+      "sequence",
+      "react",
+      "gaze",
+      "clearGaze",
+      "dragRelease",
+      "enter"
+    ],
+    "diagnostic_methods": [
+      "snapshot",
+      "states",
+      "gazeSnapshot",
+      "renderSnapshot"
+    ],
+    "events": [
+      "press",
+      "move",
+      "release",
+      "cancel",
+      "settings",
+      "menu",
+      "ready"
+    ],
+    "scene_beat_fields": ["state", "ms", "trick"]
+  },
+  "state_count": 39,
+  "state_groups": {
+    "Lifecycle": [
+      "sleeping",
+      "waking",
+      "idle",
+      "listening",
+      "thinking",
+      "searching",
+      "working"
+    ],
+    "Reactions": [
+      "excited",
+      "surprised",
+      "suspicious",
+      "angry",
+      "drowsy",
+      "happy",
+      "curious",
+      "confused",
+      "bored",
+      "proud",
+      "shy",
+      "sad",
+      "laughing",
+      "scared",
+      "playful",
+      "celebrate"
+    ],
+    "Agent morphs": ["orbit", "radar", "progress"],
+    "Product lifecycle": [
+      "spawning",
+      "humming",
+      "loading",
+      "dictating",
+      "writing",
+      "sending",
+      "receiving",
+      "uploading",
+      "notifying",
+      "alerting",
+      "dragging",
+      "bouncing",
+      "powering-down"
+    ]
+  }
+}
