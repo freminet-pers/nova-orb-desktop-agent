@@ -16,8 +16,8 @@
 
 [![Tests](https://github.com/freminet-pers/nova-orb-desktop-agent/actions/workflows/ci.yml/badge.svg)](https://github.com/freminet-pers/nova-orb-desktop-agent/actions/workflows/ci.yml)
 [![Latest release](https://img.shields.io/github/v/release/freminet-pers/nova-orb-desktop-agent?display_name=tag)](https://github.com/freminet-pers/nova-orb-desktop-agent/releases/latest)
-[![Platform](https://img.shields.io/badge/platform-Windows%2010%2F11-0078D4)](#系统要求)
-[![UI](https://img.shields.io/badge/UI-中文优先-2E8B57)](#语言与项目状态)
+[![Platform](https://img.shields.io/badge/platform-Windows%2010%2F11-0078D4)](#安装与系统要求)
+[![UI](https://img.shields.io/badge/UI-中文优先-2E8B57)](#项目状态)
 
 ![Nova Orb preview](04_桌面桌宠程序/02_角色图片与动画/品牌图标/Nova_Orb_preview.png)
 
