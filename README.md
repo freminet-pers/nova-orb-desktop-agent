@@ -9,6 +9,8 @@
   ·
   <a href="docs/INSTALL.md">安装与配置</a>
   ·
+  <a href="docs/README.md">文档目录</a>
+  ·
   <a href="https://github.com/freminet-pers/nova-orb-desktop-agent/issues">反馈问题</a>
   ·
   <a href="#english-summary">English summary</a>
@@ -19,9 +21,11 @@
 [![Platform](https://img.shields.io/badge/platform-Windows%2010%2F11-0078D4)](#安装与系统要求)
 [![UI](https://img.shields.io/badge/UI-中文优先-2E8B57)](#项目状态)
 
-![Nova Orb preview](04_桌面桌宠程序/02_角色图片与动画/品牌图标/Nova_Orb_preview.png)
-
-![Nova v0.2.0 idle view](docs/images/nova-v0.2.0-idle.png)
+<p align="center">
+  <img src="04_桌面桌宠程序/02_角色图片与动画/品牌图标/Nova_Orb_preview.png" alt="Nova Orb 原创角色预览" width="420" />
+  <img src="docs/images/nova-v0.2.0-idle.png" alt="Nova v0.2.0 空闲状态截图" width="220" />
+</p>
+<p align="center"><sub>左：原创 Nova Orb 角色资产　·　右：v0.2.0 真实空闲状态截图</sub></p>
 
 > Nova Orb 是一个 Windows 优先、低打扰、以视觉状态反馈为核心的本地优先桌面助理。它把用户主动发起的聊天、语音和受限电脑操作呈现为桌面上可观察的状态；它不是通用自动化平台，也不会把任意命令交给模型执行。
 
@@ -196,7 +200,8 @@ v0.2.0 公开验证记录为 125 项 unittest、助理 UI smoke、定向 WebEngi
 │   ├── 04_配置文件/             # 脱敏公开 profile
 │   ├── 05_可运行版本/            # 启动脚本；便携包在 Releases
 │   └── 06_语音模型/              # 本地模型说明（模型不入 Git）
-├── docs/                        # 安装、架构、路线图、发布检查
+├── docs/                        # 文档目录、安装、架构、路线图、发布检查
+│   └── archive/                 # 仅保留可公开、可复核的历史记录索引
 ├── .github/workflows/ci.yml     # Windows 测试工作流
 ├── THIRD_PARTY_NOTICES.md
 └── README.md
