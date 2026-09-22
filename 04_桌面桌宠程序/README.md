@@ -68,7 +68,7 @@ python -m PyInstaller --clean --noconfirm coco_multi.spec
 ## 隐私与安全边界
 
 - API Key、搜索 Key 和声纹档案只保存在本机用户数据区；发布包不包含任何凭据。
-- 聊天、备注、SQLite、录音、声纹、日志和模型文件均不随源码或 ZIP 发布。
+- 聊天、备注、SQLite、录音、声纹和日志不随源码或 Release 发布；模型大文件不随源码提交，Release 是否携带模型以对应资产和 `THIRD_PARTY_NOTICES.md` 为准。
 - 角色渲染不读取照片、屏幕或数据库，不依赖 CDN 或在线头像服务。
 - Agent 不执行任意 shell/PowerShell，不接受隐藏命令；工具失败不会报告为成功。
 - 本项目未在没有维护者确认的情况下添加自有代码许可证；第三方组件与模型的条款见 `THIRD_PARTY_NOTICES.md`。
