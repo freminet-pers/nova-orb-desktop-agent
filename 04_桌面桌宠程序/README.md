@@ -6,15 +6,13 @@ v0.2.0 使用暖象牙色的液态「精灵冠」作为唯一角色方向：主�
 
 ![Nova v0.2.0 角色](../docs/images/nova-v0.2.0-idle.png)
 
-## 功能
+## 核心能力（五项主线）
 
-- 桌面悬浮角色：靠近注视、单击压缩、连续抚摸、双击打开设置、拖拽移动和方向相关的释放反馈。
-- 任务状态：listening、thinking、searching、working、reply、saved、error 等状态拥有克制且可取消的视觉反馈。
-- 聊天与模型：OpenAI-compatible 接口，默认可配置 DeepSeek；支持模型列表刷新、自动路由和 Thinking 选项。
-- 联网搜索：DeepSeek 原生搜索、Tavily、Brave、DuckDuckGo 摘要和自托管 SearXNG；结果只在本次显示真实来源，不写入后续模型历史。
-- 本地语音：Whisper small 转写、`hey nova` 唤醒和可选的 Windows 用户加密声纹门；Nova 不朗读模型回复。
-- 受限 Agent：只打开开始菜单/系统目录中已发现的应用，或用户明确添加的程序入口；不提供任意 shell、PowerShell 或隐藏命令。
-- 记忆：可修订的长期备注、对话压缩和本地导出/备份；API Key 使用 Windows DPAPI 保存，不写入 SQLite。
+- 视觉状态陪伴：透明悬浮角色、有限 gaze、点击/拖拽反馈，以及 listening、thinking、working、success、error 等可取消状态。
+- 用户主动聊天与联网：OpenAI-compatible 接口和可选搜索 provider；外部结果只在本次显示，不写入后续模型历史。
+- 本地语音：Whisper small 转写、有限英文唤醒短语和可选的 Windows 用户加密声纹二次校验；Nova 不朗读模型回复。
+- 受限 Agent：只使用登记应用、可见窗口、受限文本编辑器、允许目录中的新文本文件和公开 URL；不提供任意 shell、PowerShell 或隐藏命令。
+- 本地状态与记忆：可修订的长期备注、对话压缩和本地导出/备份；API Key 使用 Windows DPAPI 保存，不写入 SQLite。
 
 ## Agent 授权边界
 
