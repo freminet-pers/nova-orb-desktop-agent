@@ -43,7 +43,7 @@
 2. 运行包根目录的 `启动Nova.cmd`；需要设置时运行 `打开Nova设置.cmd`。
 3. 只使用本地功能，直接说“打开记事本”或“创建文本文件……”；需要自由聊天或模型规划时，在“模型与联网”中主动启用对应 API。
 4. 观察 Nova 的 `listening`、`thinking`、`working`、`success`、`failure` 等状态，检查界面返回的真实结果；失败、取消和超时会回到可见的失败/空闲状态。
-5. 结束后可移动或删除整个便携目录；冻结包的用户数据默认留在 `%LOCALAPPDATA%\\\\CocoDesktop\\\\`，不会写回 Release 目录。
+5. 结束后可移动或删除整个便携目录；冻结包的用户数据默认留在 `%LOCALAPPDATA%\CocoDesktop\`，不会写回 Release 目录。
 
 这条路径只描述仓库已经有证据支持的行为。它不暗示存在尚未发布的 Lite/Full 包、英文本地化、签名或自动化演示视频。
 
@@ -101,7 +101,7 @@ v0.2.0 Release 资产是 `NovaOrb-v0.2.0-Windows-x64.zip`：
 ```powershell
 cd 04_桌面桌宠程序/01_程序源码
 python -m venv .venv
-.venv\\\\Scripts\\\\Activate.ps1
+.venv\Scripts\Activate.ps1
 python -m pip install --upgrade pip
 python -m pip install -r requirements.txt
 python -m coco
@@ -119,7 +119,7 @@ python -m coco.prepare_voice
 
 在“模型与联网”中填写 API Base URL、模型名和 API Key。远程 endpoint 建议使用 HTTPS；本机服务才使用 HTTP。API Key 默认只在内存中使用；只有用户主动选择记住时，才由 Windows DPAPI 保存到当前用户数据目录。
 
-冻结包默认使用 `%LOCALAPPDATA%\\\\CocoDesktop\\\\`；源码运行默认使用仓库外的本地状态目录。可以用 `COCO_DATA_DIR` 和 `COCO_INSTANCE_DIR` 指定隔离测试目录。聊天、搜索请求和 API 响应是否离开设备，取决于你配置的服务商；请阅读其隐私政策。
+冻结包默认使用 `%LOCALAPPDATA%\CocoDesktop\`；源码运行默认使用仓库外的本地状态目录。可以用 `COCO_DATA_DIR` 和 `COCO_INSTANCE_DIR` 指定隔离测试目录。聊天、搜索请求和 API 响应是否离开设备，取决于你配置的服务商；请阅读其隐私政策。
 
 ## 从源码构建
 
