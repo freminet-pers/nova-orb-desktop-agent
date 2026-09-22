@@ -2,11 +2,11 @@
 
 ## Windows Release
 
-从 Releases 下载 NovaOrb-2026.09.15-windows-x64.zip，解压后运行：
+从 Releases 下载 `NovaOrb-v0.2.0-Windows-x64.zip`，解压后运行包根目录的：
 
-- 04_桌面桌宠程序/05_可运行版本/启动Nova.cmd：启动桌宠；
-- 04_桌面桌宠程序/05_可运行版本/打开Nova设置.cmd：打开设置；
-- 04_桌面桌宠程序/05_可运行版本/NovaOrb/Coco.exe：底层兼容入口，不建议直接替代启动脚本。
+- `启动Nova.cmd`：启动桌宠；
+- `打开Nova设置.cmd`：打开设置；
+- `NovaOrb/Coco.exe`：底层兼容入口，不建议直接替代启动脚本。
 
 这是便携式 onedir 包。不要只复制 Coco.exe，需要保留整个 NovaOrb/ 目录及其 _internal/ 内容。当前包把 Whisper 和可选声纹模型一起放入 Release，因此体积较大。
 
@@ -46,7 +46,7 @@ python -m coco.prepare_voice
 %LOCALAPPDATA%\CocoDesktop\
 ```
 
-新版本的实例锁和本地 IPC 使用 NovaOrbDesktop 命名空间。可以通过 COCO_DATA_DIR 和 COCO_INSTANCE_DIR 指定隔离测试目录。
+v0.2.0 的实例锁和本地 IPC 使用 `NovaOrbDesktop-v020` 命名空间；历史用户数据目录仍兼容 `%LOCALAPPDATA%/CocoDesktop/`。可以通过 `COCO_DATA_DIR` 和 `COCO_INSTANCE_DIR` 指定隔离测试目录。
 
 ## 常见问题
 

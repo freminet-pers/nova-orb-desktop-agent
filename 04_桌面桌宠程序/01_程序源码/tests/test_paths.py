@@ -13,7 +13,7 @@ class PathTests(unittest.TestCase):
         local_app_data = Path(tempfile.mkdtemp())
         with patch.dict(os.environ, {"LOCALAPPDATA": str(local_app_data), "COCO_INSTANCE_DIR": ""}, clear=False):
             with patch.object(paths, "FROZEN", True):
-                self.assertEqual(paths.instance_namespace(), (local_app_data / "NovaOrbDesktop").resolve())
+                self.assertEqual(paths.instance_namespace(), (local_app_data / "NovaOrbDesktop-v020").resolve())
                 self.assertTrue(paths.instance_server_name().startswith("nova-orb-"))
                 self.assertFalse(paths.instance_server_name().startswith("coco-"))
 
