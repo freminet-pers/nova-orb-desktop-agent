@@ -36,7 +36,7 @@ Release 是否携带 Whisper/CAM++ 模型及其再分发条款，必须以该 Re
 ```powershell
 cd 04_桌面桌宠程序/01_程序源码
 python -m venv .venv
-.venv\\Scripts\\Activate.ps1
+.venv\Scripts\Activate.ps1
 python -m pip install --upgrade pip
 python -m pip install -r requirements.txt
 python -m coco
@@ -64,7 +64,7 @@ python -m coco.prepare_voice
 
 ## 用户数据位置
 
-- 冻结包默认：`%LOCALAPPDATA%\\CocoDesktop\\`；
+- 冻结包默认：`%LOCALAPPDATA%\CocoDesktop\`；
 - 源码运行默认：仓库外的本地状态目录；
 - 测试隔离：可用 `COCO_DATA_DIR` 和 `COCO_INSTANCE_DIR` 指定目录；
 - 结束试用时，关闭 Nova 后可以删除便携目录；这不会自动删除用户数据目录。
@@ -75,7 +75,7 @@ python -m coco.prepare_voice
 
 ### 双击后没有角色
 
-确认 ZIP 已完整解压，而不是在压缩包预览器中直接运行；保留 `NovaOrb/` 下所有文件，先运行 `启动Nova.cmd`。如仍失败，请在脱敏后查看 `%LOCALAPPDATA%\\CocoDesktop\\04_运行日志\\`，不要上传完整日志或绝对路径。
+确认 ZIP 已完整解压，而不是在压缩包预览器中直接运行；保留 `NovaOrb/` 下所有文件，先运行 `启动Nova.cmd`。如仍失败，请在脱敏后查看 `%LOCALAPPDATA%\CocoDesktop\04_运行日志\`，不要上传完整日志或绝对路径。
 
 ### 语音不可用
 
