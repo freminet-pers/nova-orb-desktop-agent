@@ -83,6 +83,12 @@ class NovaCanvas(QWebEngineView):
         if self.ready:
             self.page().runJavaScript('window.coco.enter()')
 
+    def handoff_enter(self, source='desktop', context=None):
+        """Start the shared entrance choreography with future handoff metadata."""
+        if self.ready:
+            args = ','.join(json.dumps(value, ensure_ascii=False) for value in (source, context))
+            self.page().runJavaScript('window.coco.handoff_enter(' + args + ')')
+
     def react(self, state, trick='', duration=2600):
         if self.ready:
             args = ','.join(json.dumps(value, ensure_ascii=False) for value in (state, trick, duration))

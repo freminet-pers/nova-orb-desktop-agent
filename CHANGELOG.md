@@ -1,26 +1,26 @@
 # Changelog
 
-## v0.1.0 — 2026-09-15
+## [0.2.0] - 2026-09-21
 
-首个公开预览版本。
+### Added
 
-### Included
+- 暖象牙色「精灵冠」Nova 角色：非对称低双峰凝胶轮廓、烟灰胶囊眼腔、柔和散射与状态分层。
+- 统一 `VisualPose` 渲染循环、状态抢占/取消、自然眨眼、低幅呼吸、八方向 gaze 和未来 `handoff_enter` 数据入口。
+- 紧凑的聊天、应用、记忆、模型与联网、语音设置导航；API、搜索、Agent 高级项可折叠。
+- Nova v0.2.0 Windows onedir 发布流程、公开截图、发布清单和 SHA-256 记录。
 
-- Windows x64 portable onedir package；
-- Qt/PySide6 desktop host and settings panel；
-- OpenAI-compatible chat endpoint；
-- Local faster-whisper speech recognition；
-- Optional English wake-word listener and local speaker verification；
-- Constrained desktop Agent tools；
-- Local SQLite state and personal memory；
-- Offline Nova Orb SVG/CSS/JavaScript renderer；
-- Unit tests, UI smoke tests and visual state contract。
+### Changed
+
+- 39 个历史视觉状态继续通过既有 Python→QWebChannel 协议工作，任务/错误状态优先于直接交互和空闲动作。
+- 角色品牌 SVG/PNG/ICO 与运行时角色统一为暖象牙视觉；移除旧深色蓝色 Orb 表达。
+- v0.2.0 使用独立的版本标识和 `NovaOrbDesktop-v020` 实例命名空间，历史用户数据路径仍保持兼容。
+
+### Fixed
+
+- 修复设置页固定左侧品牌卡、横向拥挤和 API/搜索长表单首屏占满的问题。
+- 修复 gaze 在方向切换时收敛过慢、对角线下视不明显的问题。
+- 修复任务/错误状态可能被直接交互或旧瞬态序列覆盖的优先级边界。
 
 ### Known limitations
 
-- 当前界面与主要文档为中文，暂无完整英文本地化；
-- 当前角色形象仍是功能验证阶段的过渡稿，视觉完成度不高；
-- 下一版主要迭代方向是重新设计角色形象与整套视觉语言；
-- Release 是便携式 ZIP，不是 MSI 安装器；
-- 真实目标机器上的音频权限、GPU、DPI、多显示器和 Explorer 启动仍需用户确认；
-- 源码仓库不包含语音模型，语音源码运行需要单独准备模型。
+- 真实 Explorer 启动、多显示器、桌面背景、音频设备和真人声纹准确率仍需目标 Windows 机器确认。

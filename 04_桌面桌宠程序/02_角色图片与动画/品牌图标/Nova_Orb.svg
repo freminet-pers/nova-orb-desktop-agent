@@ -1,46 +1,50 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256" role="img" aria-labelledby="title desc">
-  <title id="title">Nova Orb</title>
-  <desc id="desc">A dark, softly lit original intelligent core with two optical lenses and an orbit ring.</desc>
+  <title id="title">Nova 精灵冠</title>
+  <desc id="desc">暖象牙色的液态精灵冠主体，带有非对称低双峰和克制的烟灰胶囊眼腔。</desc>
   <defs>
-    <linearGradient id="body" x1="0" y1="0" x2="0.82" y2="1">
-      <stop offset="0" stop-color="#202633"/>
-      <stop offset="0.48" stop-color="#171c25"/>
-      <stop offset="1" stop-color="#111318"/>
+    <linearGradient id="body" x1=".18" y1=".04" x2=".82" y2=".96">
+      <stop offset="0" stop-color="#fffdf8"/>
+      <stop offset=".5" stop-color="#f7f0e5"/>
+      <stop offset="1" stop-color="#eadfce"/>
     </linearGradient>
-    <radialGradient id="sheen" cx="28%" cy="17%" r="74%">
-      <stop offset="0" stop-color="#ffffff" stop-opacity=".68"/>
-      <stop offset=".32" stop-color="#8fc7ff" stop-opacity=".22"/>
-      <stop offset="1" stop-color="#8fc7ff" stop-opacity="0"/>
+    <radialGradient id="sheen" cx="28%" cy="17%" r="80%">
+      <stop offset="0" stop-color="#fff" stop-opacity=".82"/>
+      <stop offset=".36" stop-color="#fffdf9" stop-opacity=".3"/>
+      <stop offset="1" stop-color="#fffdf9" stop-opacity="0"/>
     </radialGradient>
-    <radialGradient id="lens" cx="30%" cy="22%" r="90%">
-      <stop offset="0" stop-color="#e5f4ff"/>
-      <stop offset=".18" stop-color="#8cc8ff"/>
-      <stop offset=".68" stop-color="#3b79bc"/>
-      <stop offset="1" stop-color="#1a355b"/>
+    <linearGradient id="subsurface" x1="0" y1="0" x2=".1" y2="1">
+      <stop offset="0" stop-color="#f2dfcb" stop-opacity="0"/>
+      <stop offset=".72" stop-color="#d8bea5" stop-opacity=".15"/>
+      <stop offset="1" stop-color="#c9a889" stop-opacity=".3"/>
+    </linearGradient>
+    <linearGradient id="eye" x1="0" y1="0" x2=".9" y2="1">
+      <stop offset="0" stop-color="#9b9a90" stop-opacity=".78"/>
+      <stop offset=".48" stop-color="#74766e" stop-opacity=".92"/>
+      <stop offset="1" stop-color="#4b4e48" stop-opacity=".94"/>
+    </linearGradient>
+    <radialGradient id="pupil" cx="28%" cy="22%" r="90%">
+      <stop offset="0" stop-color="#4d5048"/>
+      <stop offset=".46" stop-color="#252a27"/>
+      <stop offset="1" stop-color="#111613"/>
     </radialGradient>
-    <filter id="blur" x="-50%" y="-300%" width="200%" height="700%">
+    <filter id="blur" x="-60%" y="-240%" width="220%" height="580%">
       <feGaussianBlur stdDeviation="4.5"/>
     </filter>
   </defs>
-  <ellipse cx="128" cy="226" rx="70" ry="9" fill="#071018" opacity=".5" filter="url(#blur)"/>
-  <g fill="none" stroke="#59a8ff" stroke-linecap="round" style="mix-blend-mode:screen">
-    <ellipse cx="128" cy="128" rx="111" ry="51" transform="rotate(-20 128 128)" stroke-width="3" stroke-dasharray="4 12" opacity=".55"/>
-    <ellipse cx="128" cy="128" rx="111" ry="51" transform="rotate(-20 128 128)" stroke-width="3.5" stroke-dasharray="27 108" opacity=".92"/>
+  <ellipse cx="130" cy="226" rx="66" ry="8" fill="#927d6e" opacity=".22" filter="url(#blur)"/>
+  <path d="M102 54 C114 41 117 35 122 35 C128 35 130 41 136 42 C142 43 148 33 155 34 C165 34 171 44 178 55 C192 68 204 92 207 117 C214 147 204 176 193 193 C179 214 154 223 122 224 C97 223 78 212 65 197 C52 182 47 165 49 147 C45 126 46 106 53 91 C61 73 79 61 102 54 Z" fill="url(#body)" stroke="#d2c6b6" stroke-width="1.35"/>
+  <path d="M102 54 C114 41 117 35 122 35 C128 35 130 41 136 42 C142 43 148 33 155 34 C165 34 171 44 178 55 C192 68 204 92 207 117 C214 147 204 176 193 193 C179 214 154 223 122 224 C97 223 78 212 65 197 C52 182 47 165 49 147 C45 126 46 106 53 91 C61 73 79 61 102 54 Z" fill="url(#sheen)" opacity=".64"/>
+  <path d="M52 149 C74 182 106 201 142 201 C166 200 188 188 202 171 C194 201 170 218 142 223 C108 229 80 214 65 197 C55 185 50 166 52 149 Z" fill="url(#subsurface)" opacity=".8"/>
+  <path d="M72 82 C85 60 107 47 130 47 C110 63 96 85 91 110 C86 129 72 139 58 130 C58 112 63 96 72 82 Z" fill="#fff" opacity=".48"/>
+  <path d="M102 54 C114 41 117 35 122 35 C128 35 130 41 136 42 C142 43 148 33 155 34 C165 34 171 44 178 55 C192 68 204 92 207 117 C214 147 204 176 193 193 C179 214 154 223 122 224 C97 223 78 212 65 197 C52 182 47 165 49 147 C45 126 46 106 53 91 C61 73 79 61 102 54 Z" fill="none" stroke="#a28f77" stroke-width="1.6" opacity=".42"/>
+  <g transform="translate(92 125) scale(1.04 .88)">
+    <path d="M-25 0 C-24 -10 -15 -15 0 -15 C15 -15 24 -10 25 0 C24 10 15 15 0 15 C-15 15 -24 10 -25 0 Z" fill="url(#eye)" stroke="#b2afa4" stroke-width=".9"/>
+    <circle cx="0" cy="0" r="5.3" fill="url(#pupil)"/>
+    <circle cx="-1.6" cy="-2.1" r="1.45" fill="#fffdf5"/>
   </g>
-  <circle cx="55" cy="91" r="2.2" fill="#59a8ff"/>
-  <circle cx="200" cy="151" r="1.8" fill="#59a8ff"/>
-  <path id="orb" d="M128 30 C162 31 196 57 220 94 C227 130 216 169 197 207 C169 227 135 231 102 221 C66 211 39 182 34 147 C25 109 43 75 69 52 C86 38 106 32 128 30 Z" fill="url(#body)" stroke="#273346" stroke-width="2"/>
-  <path d="M128 30 C162 31 196 57 220 94 C227 130 216 169 197 207 C169 227 135 231 102 221 C66 211 39 182 34 147 C25 109 43 75 69 52 C86 38 106 32 128 30 Z" fill="url(#sheen)" opacity=".42" style="mix-blend-mode:screen"/>
-  <path d="M72 59 C91 39 122 32 150 38 C119 57 99 82 89 118 C82 141 65 144 51 127 C48 100 57 77 72 59 Z" fill="#d6ecff" opacity=".23" style="mix-blend-mode:screen"/>
-  <path d="M128 30 C162 31 196 57 220 94 C227 130 216 169 197 207 C169 227 135 231 102 221 C66 211 39 182 34 147 C25 109 43 75 69 52 C86 38 106 32 128 30 Z" fill="none" stroke="#59a8ff" stroke-width="2.3" opacity=".52" style="mix-blend-mode:screen"/>
-  <g transform="translate(96 118) scale(1.15 .95)">
-    <path d="M-22 0 C-22 -11 -13 -17 0 -17 C13 -17 22 -11 22 0 C22 11 13 17 0 17 C-13 17 -22 11 -22 0 Z" fill="url(#lens)" stroke="#a6d4ff" stroke-width="1.2"/>
-    <circle cx="0" cy="0" r="6.8" fill="#07111e"/>
-    <circle cx="-2.3" cy="-3" r="1.8" fill="#fff"/>
-  </g>
-  <g transform="translate(160 118) scale(1.15 .95)">
-    <path d="M-22 0 C-22 -11 -13 -17 0 -17 C13 -17 22 -11 22 0 C22 11 13 17 0 17 C-13 17 -22 11 -22 0 Z" fill="url(#lens)" stroke="#a6d4ff" stroke-width="1.2"/>
-    <circle cx="0" cy="0" r="6.8" fill="#07111e"/>
-    <circle cx="-2.3" cy="-3" r="1.8" fill="#fff"/>
+  <g transform="translate(164 124) scale(1.1 .86)">
+    <path d="M-25 0 C-24 -10 -15 -15 0 -15 C15 -15 24 -10 25 0 C24 10 15 15 0 15 C-15 15 -24 10 -25 0 Z" fill="url(#eye)" stroke="#b2afa4" stroke-width=".9"/>
+    <circle cx="0" cy="0" r="5.3" fill="url(#pupil)"/>
+    <circle cx="-1.6" cy="-2.1" r="1.45" fill="#fffdf5"/>
   </g>
 </svg>

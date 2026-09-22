@@ -1,11 +1,11 @@
 # Third-party notices for Nova Orb
 
-This file records the dependencies used by the Windows build prepared on
-2026-09-15. Nova's visual layer is authored locally with SVG, CSS and
+This file records the dependencies used by the v0.2.0 Windows build prepared
+on 2026-09-21. Nova's visual layer is authored locally with SVG, CSS and
 JavaScript; it does not vendor or load an avatar, icon, animation or visual
-library. This public preview records the versions used for the 2026-09-15
-Windows build. Maintainers should refresh versions and retain the upstream
-license/notice files required by any later build.
+library. The v0.2.0 role and `Nova_Orb` brand icon are original project
+assets. Retain the upstream license/notice files required by the selected
+binary distribution.
 
 ## Runtime and build dependencies
 
@@ -40,6 +40,6 @@ the versioned build records if a binary is redistributed.
 
 The Nova Orb SVG, preview PNG, ICO, renderer, state table and bridge are
 original project assets in this branch. They are not derived from a remote
-avatar or icon package. The public preview does not grant a generic
-open-source license for project-authored code or artwork. See the repository
-README for the current distribution policy.
+avatar or icon package. The final release license for project-authored code
+and artwork remains a maintainer decision and is intentionally not asserted
+here before repository visibility and license are confirmed.

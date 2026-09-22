@@ -1,5 +1,4 @@
-/* Deterministic, offline Nova Orb renderer. State code sets targets; this
- * module is the sole writer of the SVG pose each frame. */
+/* Nova v0.2.0: one VisualPose, one RAF, one writer for every transform. */
 (function (global) {
   'use strict';
 
@@ -8,48 +7,57 @@
   const groups = global.NOVA_STATE_GROUPS;
   const clamp = (value, low, high) => Math.max(low, Math.min(high, value));
   const finite = (value, fallback = 0) => Number.isFinite(Number(value)) ? Number(value) : fallback;
-  const reducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const reducedMotion = Boolean(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
   const motionScale = reducedMotion ? 0.28 : 1;
-  svg.dataset.reducedMotion = reducedMotion ? 'true' : 'false';
+  const byId = id => document.getElementById(id);
+  const setAttr = (element, name, value) => {
+    if (element && element.getAttribute(name) !== value) element.setAttribute(name, value);
+  };
 
+  const bodyGroup = byId('body-group');
+  const bodyBase = byId('body-base');
+  const bodySheen = byId('body-sheen');
+  const bodySubsurface = byId('body-subsurface');
+  const bodyEnvironment = byId('body-environment');
+  const bodyHighlight = byId('body-highlight');
+  const bodyRim = byId('body-rim');
+  const shadow = byId('contact-shadow');
+  const face = byId('face');
+  const mouth = byId('mouth');
+  const orbitBack = byId('orbit-back');
+  const orbitFront = byId('orbit-front');
+  const particles = Array.from(document.querySelectorAll('#particles .nova-particle'));
+  const statusMark = byId('status-mark');
+  const eyes = [byId('eye-left'), byId('eye-right')];
+  const pupilEls = eyes.map(eye => eye.querySelector('.nova-pupil'));
+  const glintEls = eyes.map(eye => eye.querySelector('.nova-glint'));
+  const lidEls = eyes.map(eye => eye.querySelector('.nova-lid'));
   const numericFields = Object.keys(defs.idle).filter(key => typeof defs.idle[key] === 'number');
   const pose = {
     current: Object.assign({}, defs.idle),
     target: Object.assign({}, defs.idle),
     velocity: Object.fromEntries(numericFields.map(key => [key, 0])),
   };
+  const springScratch = { value: 0, velocity: 0 };
 
-  const bodyGroup = document.getElementById('body-group');
-  const face = document.getElementById('face');
-  const particles = Array.from(document.querySelectorAll('#particles .nova-particle'));
-  const eyes = [document.getElementById('eye-left'), document.getElementById('eye-right')];
-  const pupilEls = eyes.map(eye => eye.querySelector('.nova-pupil'));
-  const glintEls = eyes.map(eye => Array.from(eye.querySelectorAll('.nova-glint')));
-  const lidEls = eyes.map(eye => eye.querySelector('.nova-lid'));
-  const canvas = document.getElementById('nova-canvas');
-  const canvasContext = canvas && canvas.getContext('2d');
-  let canvasScaleX = 1;
-  let canvasScaleY = 1;
-  let lastGroupTransform = '';
-  let lastSnapshotGroupTransform = '';
-  let lastFaceTransform = '';
-  let lastFaceExpressionKey = '';
-  let lastSvgState = '';
-  let cachedCanvasGradients = null;
-  const sceneCache = new Map();
-  const SCENE_CACHE_LIMIT = 12;
-
-  // Twelve authored control points keep the base contour asymmetric while the
-  // second point set supplies a bounded expression morph. No source shape is
-  // imported from an avatar, icon pack, or remote library.
+  // Two authored, same-topology paths create the crown's gentle low double
+  // peak. The points are intentionally local to Nova; no avatar path is used.
   const SHAPE_A = [
-    [110, 28], [141, 32], [177, 58], [191, 91], [185, 128], [169, 176],
-    [139, 195], [105, 199], [72, 188], [45, 161], [34, 123], [38, 82],
+    [88, 46], [105, 30], [117, 36], [133, 29], [153, 47], [177, 82],
+    [182, 126], [165, 167], [132, 191], [98, 192], [64, 173], [42, 125],
   ];
   const SHAPE_B = [
-    [108, 32], [137, 29], [174, 49], [194, 82], [181, 119], [178, 158],
-    [151, 190], [116, 202], [80, 193], [51, 174], [31, 137], [42, 79],
+    [84, 49], [103, 34], [116, 31], [134, 34], [156, 43], [180, 78],
+    [180, 122], [169, 163], [137, 188], [101, 196], [67, 170], [40, 122],
   ];
+
+  const PRIORITY = Object.freeze({
+    idle: 0, humming: 10, happy: 40, curious: 42, playful: 44, excited: 46,
+    saved: 72, launched: 72, reply: 72, dragging: 82, dictating: 86, listening: 88,
+    writing: 84, sending: 84, loading: 86, thinking: 84, searching: 80, working: 80,
+    spawning: 96, waking: 92, sleeping: 92, alerting: 98, error: 99,
+    'powering-down': 100,
+  });
 
   let visualState = 'idle';
   let persistentState = 'idle';
@@ -57,30 +65,27 @@
   let sequenceToken = 0;
   let raf = null;
   let lastFrame = 0;
-  let lastPaint = -Infinity;
-  let paintRequested = true;
+  let lastAccent = '';
+  let lastShapeKey = '';
+  let lastBodyTransform = '';
+  let lastFaceTransform = '';
+  let lastOrbitTransform = '';
+  let lastShadowTransform = '';
+  let lastMouthTransform = '';
   let lastIdle = { lean: 0, lift: 0, glance: 0, orbit: 0 };
-  let lastBlink = 1;
-  let orbitAngle = -18;
   let idleAction = null;
   let idleIndex = 0;
   let nextIdleAt = 0;
-  let lastStrongInteraction = -Infinity;
   let nextBlinkAt = 0;
-  let blinkUntil = 0;
+  let blinkStarted = 0;
+  let lastStrongInteraction = -Infinity;
   let trickImpulse = null;
   let releaseImpulse = null;
-  let springNextValue = 0;
-  let springNextVelocity = 0;
-  const idleResult = { lean: 0, lift: 0, glance: 0, orbit: 0 };
-  let shapePathKey = '';
-  let highlightPathKey = '';
-  let shapePath = '';
-  let highlightPath = '';
-  let paintedCacheKey = '';
+  let orbitAngle = -14;
+  let ambientTimer = null;
   let gazeReturnTimer = null;
   let gazeReturnToken = 0;
-  let ambientTimer = null;
+  let renderMetrics = null;
   const idleIntervals = [11.4, 15.8, 9.6, 17.2, 12.7];
   const idleActions = ['glance', 'dip', 'tilt', 'double-glance', 'orbit-flash'];
   const blinkIntervals = [3.8, 5.1, 4.2, 6.0];
@@ -96,7 +101,7 @@
     input: { x: 110, y: 110, width: 220, height: 220, nx: 0.5, ny: 0.5, active: false },
   };
 
-  function spring(value, velocity, target, dt, stiffness = 48, damping = 13, maxVelocity = 8) {
+  function integrate(value, velocity, target, dt, stiffness, damping, maxVelocity) {
     const force = (target - value) * stiffness;
     let nextVelocity = (velocity + force * dt) * Math.exp(-damping * dt);
     nextVelocity = clamp(nextVelocity, -maxVelocity, maxVelocity);
@@ -105,39 +110,25 @@
       nextValue = target;
       nextVelocity = 0;
     }
-    // Reuse scalar scratch slots; returning a fresh array for every field on
-    // every RAF tick makes the embedded Chromium heap retain needless churn.
-    springNextValue = nextValue;
-    springNextVelocity = nextVelocity;
+    springScratch.value = nextValue;
+    springScratch.velocity = nextVelocity;
   }
 
-  function interpolatePose(dt) {
+  function integratePose(dt) {
     for (const key of numericFields) {
-      const stiffness = key === 'orbitSpeed' ? 32 : key === 'pulse' ? 58 : 48;
-      const maxVelocity = key.includes('Scale') ? 3 : key === 'bodyLift' ? 28 : 8;
-      spring(pose.current[key], pose.velocity[key], pose.target[key], dt, stiffness, 13, maxVelocity);
-      pose.current[key] = springNextValue;
-      pose.velocity[key] = springNextVelocity;
+      const stiffness = key === 'orbitSpeed' ? 30 : key === 'pulse' ? 54 : 46;
+      const maxVelocity = key.includes('Scale') ? 3 : key === 'bodyLift' ? 26 : 8;
+      integrate(pose.current[key], pose.velocity[key], pose.target[key], dt, stiffness, 13, maxVelocity);
+      pose.current[key] = springScratch.value;
+      pose.velocity[key] = springScratch.velocity;
     }
-    spring(gaze.x, gaze.vx, gaze.targetX, dt, 64, 17, 7);
-    gaze.x = springNextValue; gaze.vx = springNextVelocity;
-    spring(gaze.y, gaze.vy, gaze.targetY, dt, 64, 17, 7);
-    gaze.y = springNextValue; gaze.vy = springNextVelocity;
-  }
-
-  function setTargets(name) {
-    const next = defs[name] || defs.idle;
-    for (const key of numericFields) pose.target[key] = finite(next[key], pose.target[key]);
-    pose.target.bodyTint = next.bodyTint || defs.idle.bodyTint;
-    pose.target.accent = next.accent || defs.idle.accent;
-    visualState = defs[name] ? name : 'idle';
-    paintRequested = true;
-  }
-
-  function markInteraction(strength = 1) {
-    if (strength > 0.15) lastStrongInteraction = performance.now();
-    idleAction = null;
-    paintRequested = true;
+    integrate(gaze.x, gaze.vx, gaze.targetX, dt, 82, 18, 7.5);
+    gaze.x = springScratch.value;
+    gaze.vx = springScratch.velocity;
+    integrate(gaze.y, gaze.vy, gaze.targetY, dt, 82, 18, 7.5);
+    gaze.y = springScratch.value;
+    gaze.x = clamp(gaze.x, -1, 1);
+    gaze.y = clamp(gaze.y, -1, 1);
   }
 
   function scheduleNextIdle(now) {
@@ -149,14 +140,11 @@
   }
 
   function updateIdle(now) {
-    idleResult.lean = 0;
-    idleResult.lift = 0;
-    idleResult.glance = 0;
-    idleResult.orbit = 0;
-    const ambient = visualState === 'idle' || visualState === 'humming' || visualState === 'bored' || visualState === 'drowsy';
+    const ambient = ['idle', 'humming', 'bored', 'drowsy'].includes(visualState);
+    lastIdle = { lean: 0, lift: 0, glance: 0, orbit: 0 };
     if (!ambient || sequenceTimer || now - lastStrongInteraction < 30000) {
       idleAction = null;
-      return idleResult;
+      return lastIdle;
     }
     if (!nextIdleAt) scheduleNextIdle(now);
     if (!idleAction && now >= nextIdleAt) {
@@ -164,88 +152,78 @@
       idleIndex += 1;
       scheduleNextIdle(now);
     }
-    if (!idleAction) return idleResult;
+    if (!idleAction) return lastIdle;
     const elapsed = now - idleAction.started;
     const duration = idleAction.kind === 'orbit-flash' ? 900 : idleAction.kind === 'double-glance' ? 1200 : 1050;
     if (elapsed >= duration) {
       idleAction = null;
-      return idleResult;
+      return lastIdle;
     }
     const u = clamp(elapsed / duration, 0, 1);
     const wave = Math.sin(Math.PI * u) * motionScale;
     if (idleAction.kind === 'glance') {
-      idleResult.lean = 2.2 * wave;
-      idleResult.glance = 0.34 * wave;
+      lastIdle.lean = 2.2 * wave;
+      lastIdle.glance = 0.34 * wave;
     } else if (idleAction.kind === 'dip') {
-      idleResult.lift = -2.7 * wave;
+      lastIdle.lift = -2.7 * wave;
     } else if (idleAction.kind === 'tilt') {
-      idleResult.lean = -2.7 * wave;
-      idleResult.lift = 1.2 * wave;
-      idleResult.glance = -0.2 * wave;
+      lastIdle.lean = -2.7 * wave;
+      lastIdle.lift = 1.2 * wave;
+      lastIdle.glance = -0.2 * wave;
     } else if (idleAction.kind === 'double-glance') {
       const doubleWave = Math.sin(u * Math.PI * 4) * wave;
-      idleResult.lean = 1.8 * doubleWave;
-      idleResult.glance = 0.24 * doubleWave;
+      lastIdle.lean = 1.8 * doubleWave;
+      lastIdle.glance = 0.24 * doubleWave;
     } else {
-      idleResult.orbit = wave;
+      lastIdle.orbit = wave;
     }
-    return idleResult;
+    return lastIdle;
   }
 
   function updateBlink(now) {
-    if (visualState === 'sleeping' || visualState === 'spawning' || visualState === 'powering-down') return 1;
+    if (['sleeping', 'spawning', 'powering-down'].includes(visualState)) return 1;
     if (!nextBlinkAt) scheduleNextBlink(now);
-    if (!blinkUntil && now >= nextBlinkAt) {
-      blinkUntil = now + (reducedMotion ? 210 : 145);
+    const duration = reducedMotion ? 210 : 145;
+    if (!blinkStarted && now >= nextBlinkAt) {
+      blinkStarted = now;
       scheduleNextBlink(now);
     }
-    if (!blinkUntil) return 1;
-    const elapsed = now - (blinkUntil - (reducedMotion ? 210 : 145));
-    const duration = reducedMotion ? 210 : 145;
+    if (!blinkStarted) return 1;
+    const elapsed = now - blinkStarted;
     if (elapsed >= duration) {
-      blinkUntil = 0;
+      blinkStarted = 0;
       return 1;
     }
-    const u = elapsed / duration;
-    return clamp(Math.abs(u * 2 - 1) * 1.2, 0.06, 1);
+    return clamp(Math.abs((elapsed / duration) * 2 - 1) * 1.2, 0.06, 1);
   }
 
-  function clearAmbientTimer() {
-    if (!ambientTimer) return;
-    clearTimeout(ambientTimer);
-    ambientTimer = null;
+  function markInteraction(strength = 1) {
+    if (strength > 0.15) lastStrongInteraction = performance.now();
+    idleAction = null;
   }
 
-  function scheduleAmbientWake(now) {
-    if (ambientTimer || document.hidden) return;
-    let wakeAt = now + 60000;
-    const ambient = visualState === 'idle' || visualState === 'humming'
-      || visualState === 'bored' || visualState === 'drowsy';
-    if (ambient && !sequenceTimer) {
-      if (!nextIdleAt || nextIdleAt <= now) scheduleNextIdle(now);
-      wakeAt = Math.min(wakeAt, nextIdleAt);
-    }
-    const blinkBlocked = visualState === 'sleeping' || visualState === 'spawning'
-      || visualState === 'powering-down';
-    if (!blinkBlocked) {
-      if (!nextBlinkAt || nextBlinkAt <= now) scheduleNextBlink(now);
-      wakeAt = Math.min(wakeAt, nextBlinkAt);
-    }
-    const delay = Math.max(80, Math.min(60000, wakeAt - now));
-    ambientTimer = setTimeout(() => {
-      ambientTimer = null;
-      paintRequested = true;
-      start();
-    }, delay);
+  function clearSequence() {
+    sequenceToken += 1;
+    if (sequenceTimer) clearTimeout(sequenceTimer);
+    sequenceTimer = null;
+  }
+
+  function setTargets(name) {
+    const next = defs[name] || defs.idle;
+    for (const key of numericFields) pose.target[key] = finite(next[key], pose.target[key]);
+    pose.target.bodyTint = next.bodyTint || defs.idle.bodyTint;
+    pose.target.accent = next.accent || defs.idle.accent;
+    visualState = defs[name] ? name : 'idle';
   }
 
   function pointsForMorph(morph) {
     const normalized = clamp(morph, -1, 1);
     return SHAPE_A.map((point, index) => {
       const other = SHAPE_B[index];
-      const x = point[0] + (other[0] - point[0]) * normalized;
-      const y = point[1] + (other[1] - point[1]) * normalized;
-      return [x, y];
+      return [
+        point[0] + (other[0] - point[0]) * normalized,
+        point[1] + (other[1] - point[1]) * normalized,
+      ];
     });
   }
 
@@ -275,387 +253,170 @@
       const u = clamp(age / impulse.duration, 0, 1);
       const envelope = Math.sin(Math.PI * u) * impulse.strength * motionScale;
       if (impulse.kind === 'bounce') {
-        result.lift += (8 + 12 * impulse.strength) * envelope;
-        result.scaleY += 0.055 * envelope;
-        result.scaleX -= 0.026 * envelope;
+        result.lift += (8 + 17 * impulse.strength) * envelope;
+        result.scaleY += 0.06 * envelope;
+        result.scaleX -= 0.028 * envelope;
       } else if (impulse.kind === 'sway') {
-        result.rotation += Math.sin(Math.PI * 2 * u) * (1.2 + 4.2 * impulse.strength) * (1 - 0.3 * u) * motionScale;
-        result.scaleX += 0.022 * envelope;
+        result.rotation += Math.sin(Math.PI * 2 * u) * (1.2 + 4.6 * impulse.strength) * (1 - 0.3 * u) * motionScale;
+        result.scaleX += 0.024 * envelope;
       } else if (impulse.kind === 'spin') {
-        result.rotation += Math.sin(Math.PI * u) * 11 * impulse.strength * motionScale;
+        result.rotation += Math.sin(Math.PI * u) * 8 * impulse.strength * motionScale;
       } else if (impulse.kind === 'burst') {
-        result.lift += 5 * envelope;
+        result.lift += 4.5 * envelope;
         result.sparkle += envelope;
       }
     }
     return result;
   }
 
-  function resizeCanvas() {
-    if (!canvasContext) return null;
-    const rect = canvas.getBoundingClientRect();
-    // CSS breathing transforms the visible bounds, but must not resize the
-    // backing bitmap on every frame. clientWidth/clientHeight are the layout
-    // dimensions before that compositor-only transform.
-    const width = canvas.clientWidth || 220;
-    const height = canvas.clientHeight || 220;
-    const dpr = clamp(finite(global.devicePixelRatio, 1), 1, 3);
-    const pixelWidth = Math.max(1, Math.round(width * dpr));
-    const pixelHeight = Math.max(1, Math.round(height * dpr));
-    if (canvas.width !== pixelWidth || canvas.height !== pixelHeight) {
-      canvas.width = pixelWidth;
-      canvas.height = pixelHeight;
-      cachedCanvasGradients = null;
-      sceneCache.clear();
-      paintedCacheKey = '';
-    }
-    canvasScaleX = width / 220;
-    canvasScaleY = height / 220;
-    canvasContext.setTransform(canvasScaleX * dpr, 0, 0, canvasScaleY * dpr, 0, 0);
-    return { x: rect.x, y: rect.y, width, height };
-  }
-
-  function getCanvasGradients(context) {
-    if (cachedCanvasGradients) return cachedCanvasGradients;
-    // Gradients are deliberately created once per canvas context. Recreating
-    // several SVG-like gradients on every RAF tick grows QtWebEngine's
-    // software raster cache even when the bitmap buffer itself is reused.
-    cachedCanvasGradients = {
-      shadow: context.createRadialGradient(110, 194, 0, 110, 194, 64),
-      body: context.createLinearGradient(20, 20, 190, 205),
-      sheen: context.createRadialGradient(60, 52, 0, 60, 52, 145),
-      highlight: context.createLinearGradient(45, 40, 129, 127),
-      environment: context.createLinearGradient(0, 145, 0, 198),
-      lens: context.createRadialGradient(-10, -10, 1, 0, 0, 28),
-    };
-    cachedCanvasGradients.shadow.addColorStop(0, 'rgba(7,16,24,0.38)');
-    cachedCanvasGradients.shadow.addColorStop(1, 'rgba(7,16,24,0)');
-    cachedCanvasGradients.body.addColorStop(0, '#202633');
-    cachedCanvasGradients.body.addColorStop(0.48, '#171c25');
-    cachedCanvasGradients.body.addColorStop(1, '#111318');
-    cachedCanvasGradients.sheen.addColorStop(0, 'rgba(255,255,255,0.68)');
-    cachedCanvasGradients.sheen.addColorStop(0.32, 'rgba(143,199,255,0.22)');
-    cachedCanvasGradients.sheen.addColorStop(1, 'rgba(143,199,255,0)');
-    cachedCanvasGradients.highlight.addColorStop(0, 'rgba(214,236,255,0.38)');
-    cachedCanvasGradients.highlight.addColorStop(0.24, 'rgba(133,189,255,0.08)');
-    cachedCanvasGradients.highlight.addColorStop(0.58, 'rgba(133,189,255,0)');
-    cachedCanvasGradients.environment.addColorStop(0, 'rgba(101,215,176,0)');
-    cachedCanvasGradients.environment.addColorStop(0.72, 'rgba(101,215,176,0.04)');
-    cachedCanvasGradients.environment.addColorStop(1, 'rgba(101,215,176,0.35)');
-    cachedCanvasGradients.lens.addColorStop(0, '#e5f4ff');
-    cachedCanvasGradients.lens.addColorStop(0.18, '#8cc8ff');
-    cachedCanvasGradients.lens.addColorStop(0.68, '#3b79bc');
-    cachedCanvasGradients.lens.addColorStop(1, '#1a355b');
-    return cachedCanvasGradients;
-  }
-
-  function canvasBlob(context, points) {
-    const tension = 0.92;
-    context.beginPath();
-    context.moveTo(points[0][0], points[0][1]);
-    for (let index = 0; index < points.length; index += 1) {
-      const p0 = points[(index - 1 + points.length) % points.length];
-      const p1 = points[index];
-      const p2 = points[(index + 1) % points.length];
-      const p3 = points[(index + 2) % points.length];
-      const c1x = p1[0] + (p2[0] - p0[0]) * tension / 6;
-      const c1y = p1[1] + (p2[1] - p0[1]) * tension / 6;
-      const c2x = p2[0] - (p3[0] - p1[0]) * tension / 6;
-      const c2y = p2[1] - (p3[1] - p1[1]) * tension / 6;
-      context.bezierCurveTo(c1x, c1y, c2x, c2y, p2[0], p2[1]);
-    }
-    context.closePath();
-  }
-
-  function canvasHighlight(context, current) {
-    context.beginPath();
-    context.moveTo(60 + current.highlightX * 0.08, 51 + current.highlightY * 0.08);
-    context.bezierCurveTo(80, 38, 107, 33, 129, 39);
-    context.bezierCurveTo(103, 55, 86, 76, 77, 106);
-    context.bezierCurveTo(71, 125, 56, 127, 45, 113);
-    context.bezierCurveTo(43, 91, 49, 67, 60 + current.highlightX * 0.08, 51 + current.highlightY * 0.08);
-    context.closePath();
-  }
-
-  function canvasEnvironment(context) {
-    context.beginPath();
-    context.moveTo(42, 145);
-    context.bezierCurveTo(67, 171, 104, 183, 142, 177);
-    context.bezierCurveTo(156, 175, 169, 168, 180, 157);
-    context.bezierCurveTo(174, 178, 159, 190, 141, 196);
-    context.bezierCurveTo(114, 202, 80, 191, 61, 179);
-    context.bezierCurveTo(50, 171, 43, 159, 42, 145);
-    context.closePath();
-  }
-
-  function canvasOrbit(context, back, opacity, accent, tilt) {
-    context.save();
-    context.translate(110, 111);
-    context.rotate((tilt + orbitAngle) * Math.PI / 180);
-    context.translate(-110, -111);
-    context.globalAlpha = opacity * (back ? 0.55 : 1);
-    context.strokeStyle = accent;
-    context.lineWidth = currentOrbitThickness + (back ? 0 : 0.35);
-    context.setLineDash(back ? [3, 10] : [24, 92]);
-    context.beginPath();
-    context.ellipse(110, 111, 94, 43, 0, 0, Math.PI * 2);
-    context.stroke();
-    context.setLineDash([]);
-    context.fillStyle = accent;
-    const nodes = back ? [[29, 94, 1.8], [184, 132, 1.4]] : [[174, 84, 2.2], [78, 151, 1.2]];
-    nodes.forEach(([x, y, radius]) => {
-      context.beginPath();
-      context.arc(x, y, radius, 0, Math.PI * 2);
-      context.fill();
-    });
-    context.restore();
-  }
-
-  let currentOrbitThickness = 1.5;
-
-  function syncSvgFace(current, gx, gy, blink) {
-    // Keep the optical lens geometry in SVG for crisp edges and native event
-    // compatibility. It is updated only during an event-driven paint window,
-    // never by the ambient idle loop.
-    if (bodyGroup.getAttribute('transform') !== lastGroupTransform) {
-      bodyGroup.setAttribute('transform', lastGroupTransform);
-    }
-    if (lastSvgState !== visualState) {
-      svg.dataset.state = visualState;
-      lastSvgState = visualState;
-    }
-    const cssFaceTransform = `translate(${(gx * 9.5).toFixed(2)}px, ${(gy * 4.3).toFixed(2)}px) rotate(${(gx * 2.8 + gy * 1.2).toFixed(2)}deg)`;
-    if (lastFaceTransform !== cssFaceTransform) {
-      face.style.transform = cssFaceTransform;
-      lastFaceTransform = cssFaceTransform;
+  function render(now, dt) {
+    integratePose(dt);
+    const current = pose.current;
+    const idle = updateIdle(now);
+    const blink = updateBlink(now);
+    const impulse = impulseValues(now);
+    const animatedPulse = current.pulse > 0 ? (0.5 + 0.5 * Math.sin(now / 240)) * current.pulse : 0;
+    const lift = current.bodyLift + idle.lift + impulse.lift;
+    const rotation = current.bodyRotation + idle.lean + impulse.rotation + gaze.x * 1.65 + gaze.y * 0.8;
+    const scaleX = current.bodyScaleX * (1 + impulse.scaleX + Math.abs(gaze.x) * 0.008);
+    const scaleY = current.bodyScaleY * (1 + impulse.scaleY + Math.abs(gaze.y) * 0.006);
+    const bodyTransform = `translate(0 ${(-lift).toFixed(2)}) translate(110 110) rotate(${rotation.toFixed(2)}) skewX(${current.bodySkew.toFixed(2)}) scale(${scaleX.toFixed(4)} ${scaleY.toFixed(4)}) translate(-110 -110)`;
+    if (bodyTransform !== lastBodyTransform) {
+      setAttr(bodyGroup, 'transform', bodyTransform);
+      lastBodyTransform = bodyTransform;
     }
 
-    // Expression geometry changes at state/blink cadence. Gaze itself is a
-    // single group transform above; keeping the individual eye paths and
-    // glints out of the high-frequency path avoids repeated SVG rasterization
-    // in QtWebEngine's software compositor.
-    const expressionKey = [
-      current.eyeOpenL.toFixed(2), current.eyeOpenR.toFixed(2),
-      current.eyeScaleX.toFixed(2), current.eyeScaleY.toFixed(2),
-      current.eyeSpacing.toFixed(2), current.faceOffsetY.toFixed(2),
-      current.focus.toFixed(2), current.pupilFocus.toFixed(2), blink.toFixed(2),
-      gaze.targetX.toFixed(2), gaze.targetY.toFixed(2),
-    ].join(':');
-    if (expressionKey === lastFaceExpressionKey) return;
-    lastFaceExpressionKey = expressionKey;
-    const eyeSpacing = 26 + current.eyeSpacing;
+    const shapeKey = current.morph.toFixed(3);
+    if (shapeKey !== lastShapeKey) {
+      const path = blobPath(pointsForMorph(current.morph));
+      setAttr(bodyBase, 'd', path);
+      setAttr(bodySheen, 'd', path);
+      setAttr(bodyRim, 'd', path);
+      lastShapeKey = shapeKey;
+    }
+
+    const influence = clamp(current.gazeInfluence, 0, 1);
+    const scan = ['searching', 'radar'].includes(visualState) ? Math.sin(now / 260) * 0.16 : 0;
+    const gx = clamp((gaze.x + scan) * influence + idle.glance, -1, 1);
+    const gy = clamp(gaze.y * influence - current.focus * 0.08, -1, 1);
+    const faceTransform = `translate(${(gx * 3.8).toFixed(2)} ${(gy * 2.6).toFixed(2)}) rotate(${(gx * 1.25 + gy * 0.55).toFixed(2)})`;
+    if (faceTransform !== lastFaceTransform) {
+      setAttr(face, 'transform', faceTransform);
+      lastFaceTransform = faceTransform;
+    }
+
     const faceY = 101 + current.faceOffsetY;
-    const eyePositions = [-1, 1].map(side => ({
-      x: 110 + side * eyeSpacing,
-      y: faceY,
-      angle: 0,
-    }));
+    const eyeSx = current.eyeScaleX * (1 + Math.abs(gx) * 0.018);
+    const eyeSy = current.eyeScaleY;
+    const eyePositions = [
+      { x: 77 + gx * 7.2, y: faceY + gy * 14.0, angle: -gx * 1.8 + gy * 0.5 },
+      { x: 133 + gx * 8.0, y: faceY + gy * 13.2, angle: -gx * 1.35 + gy * 0.5 },
+    ];
     eyePositions.forEach((position, index) => {
       const open = (index === 0 ? current.eyeOpenL : current.eyeOpenR) * blink;
-      const eyeScaleX = current.eyeScaleX;
-      const eyeScaleY = current.eyeScaleY * clamp(open, 0.05, 1.28);
-      eyes[index].setAttribute('transform', `translate(${position.x.toFixed(2)} ${position.y.toFixed(2)}) scale(${eyeScaleX.toFixed(4)} ${eyeScaleY.toFixed(4)})`);
-      const pupilX = clamp(gaze.targetX * 7.6 + (index === 0 ? -1 : 1) * gaze.targetX * 0.65, -8.2, 8.2);
-      const pupilY = clamp(gaze.targetY * 5.8 - current.focus * 1.4, -6.8, 6.8);
-      const pupilScale = clamp(0.82 + current.pupilFocus * 0.28, 0.76, 1.16);
-      pupilEls[index].setAttribute('transform', `translate(${pupilX.toFixed(2)} ${pupilY.toFixed(2)}) scale(${pupilScale.toFixed(3)})`);
-      glintEls[index][0].setAttribute('transform', `translate(${(pupilX - 2.2).toFixed(2)} ${(pupilY - 2.7).toFixed(2)})`);
-      glintEls[index][1].setAttribute('transform', `translate(${(pupilX + 3.7).toFixed(2)} ${(pupilY + 3.4).toFixed(2)})`);
-      lidEls[index].style.opacity = clamp(0.14 + (1 - open) * 0.36, 0.12, 0.62).toFixed(3);
+      const sy = eyeSy * clamp(open, 0.05, 1.24);
+      setAttr(eyes[index], 'transform', `translate(${position.x.toFixed(2)} ${position.y.toFixed(2)}) rotate(${position.angle.toFixed(2)}) scale(${eyeSx.toFixed(4)} ${sy.toFixed(4)})`);
+      const pupilX = clamp(gx * 6.2 + (index === 0 ? gx * 0.28 : gx * 0.62), -7.1, 7.1);
+      const pupilY = clamp(gy * 5.6 - current.focus * 1.25, -6.5, 6.5);
+      const pupilScale = clamp(0.82 + current.pupilFocus * 0.25, 0.74, 1.12);
+      setAttr(pupilEls[index], 'transform', `translate(${pupilX.toFixed(2)} ${pupilY.toFixed(2)}) scale(${pupilScale.toFixed(3)})`);
+      setAttr(glintEls[index], 'transform', `translate(${(pupilX - 1.55).toFixed(2)} ${(pupilY - 2).toFixed(2)})`);
+      lidEls[index].style.opacity = clamp(0.14 + (1 - open) * 0.38, 0.12, 0.7).toFixed(3);
     });
-  }
 
-  function render(now, dt) {
-    const frame = resizeCanvas();
-    if (!frame) return;
-    const context = canvasContext;
-    const idle = lastIdle;
-    const impulse = impulseValues(now);
-    const blink = lastBlink;
-    const current = pose.current;
-    const influence = clamp(current.gazeInfluence, 0, 1);
-    const scan = (visualState === 'searching' || visualState === 'radar') ? Math.sin(now / 260) * 0.16 : 0;
-    const gx = clamp((gaze.x + scan) * influence, -1, 1);
-    const gy = clamp(gaze.y * influence, -1, 1);
-    const rotation = current.bodyRotation + gx * 4.2 + idle.lean + impulse.rotation;
-    const lift = current.bodyLift + idle.lift + impulse.lift;
-    const breath = Math.sin(now / 1370) * 0.008 * motionScale;
-    const scaleX = current.bodyScaleX * (1 + impulse.scaleX - breath * 0.32);
-    const scaleY = current.bodyScaleY * (1 + impulse.scaleY + breath);
-    lastSnapshotGroupTransform = `translate(110 110) rotate(${rotation.toFixed(2)}) skewX(${(current.bodySkew + gx * 1.7).toFixed(2)}) scale(${scaleX.toFixed(4)} ${scaleY.toFixed(4)}) translate(-110 ${(-110 - lift).toFixed(2)})`;
-    const staticRotation = current.bodyRotation + idle.lean;
-    const staticLift = current.bodyLift + idle.lift;
-    // Breath is compositor-only on the Canvas layer; keep the SVG face's
-    // parent transform stable between state changes and gaze updates.
-    const staticScaleX = current.bodyScaleX;
-    const staticScaleY = current.bodyScaleY;
-    lastGroupTransform = `translate(110 110) rotate(${staticRotation.toFixed(2)}) skewX(${current.bodySkew.toFixed(2)}) scale(${staticScaleX.toFixed(4)} ${staticScaleY.toFixed(4)}) translate(-110 ${(-110 - staticLift).toFixed(2)})`;
-
-    const accent = current.accent || '#59A8FF';
-    const gradients = getCanvasGradients(context);
-    const bodyPoints = pointsForMorph(current.morph + idle.lean * 0.012);
-    const nextShapeKey = `${current.morph.toFixed(2)}:${idle.lean.toFixed(2)}`;
-    if (nextShapeKey !== shapePathKey) {
-      shapePath = blobPath(bodyPoints);
-      shapePathKey = nextShapeKey;
+    const mouthTransform = `translate(110 ${(136 + current.faceOffsetY + gy * 2.2).toFixed(2)}) scale(${(1 + current.mouth * 0.12).toFixed(3)} ${(1 + current.mouth * 0.18).toFixed(3)})`;
+    if (mouthTransform !== lastMouthTransform) {
+      setAttr(mouth, 'transform', mouthTransform);
+      lastMouthTransform = mouthTransform;
     }
-    const nextHighlightKey = `${current.highlightX.toFixed(3)}:${current.highlightY.toFixed(3)}`;
-    if (nextHighlightKey !== highlightPathKey) {
-      highlightPath = `M${(60 + current.highlightX * 0.08).toFixed(2)} ${(51 + current.highlightY * 0.08).toFixed(2)} C80 38 107 33 129 39 C103 55 86 76 77 106 C71 125 56 127 45 113 C43 91 49 67 60 51 Z`;
-      highlightPathKey = nextHighlightKey;
+    mouth.style.opacity = clamp(current.mouth * (0.64 + animatedPulse * 0.28), 0, 0.9).toFixed(3);
+
+    const accent = pose.target.accent || '#9a886f';
+    if (accent !== lastAccent) {
+      svg.style.setProperty('--nova-accent', accent);
+      lastAccent = accent;
     }
+    bodyRim.style.opacity = clamp(current.rimIntensity * (0.82 + animatedPulse * 0.28), 0, 0.78).toFixed(3);
+    bodySheen.style.opacity = clamp(0.5 + current.glow * 0.46 + animatedPulse * 0.1, 0.35, 0.9).toFixed(3);
+    bodyHighlight.style.opacity = clamp(0.42 + current.glow * 0.38, 0.3, 0.8).toFixed(3);
+    bodySubsurface.style.opacity = clamp(current.subsurface + Math.abs(gaze.y) * 0.04, 0.28, 0.9).toFixed(3);
+    bodyEnvironment.style.opacity = clamp(0.06 + current.subsurface * 0.06, 0.05, 0.14).toFixed(3);
 
-    syncSvgFace(current, gx, gy, blink);
-    // The body/effects bitmap is state-scoped and deliberately independent of
-    // gaze and short impulses. Those high-frequency changes are carried by
-    // the crisp SVG face and compositor transforms, so interaction paints can
-    // restore one cached bitmap instead of rerasterizing the full scene.
-    const cacheKey = visualState;
-    if (cacheKey && sceneCache.has(cacheKey)) {
-      // A cached scene already occupies the canvas. Restoring it on every
-      // gaze/impulse frame needlessly invalidates the software compositor;
-      // restore only when the visual state actually changes.
-      if (paintedCacheKey !== cacheKey) {
-        context.clearRect(0, 0, 220, 220);
-        context.putImageData(sceneCache.get(cacheKey), 0, 0);
-        paintedCacheKey = cacheKey;
-      }
-      return;
+    setAttr(shadow, 'transform', `translate(0 ${(-lift * 0.12).toFixed(2)}) scale(${(current.shadowScale * (1 - impulse.lift * 0.006)).toFixed(4)} 1)`);
+    shadow.style.opacity = clamp(current.shadowOpacity * (1 - Math.max(0, lift) * 0.018), 0.08, 0.32).toFixed(3);
+    orbitAngle += current.orbitSpeed * dt * 54;
+    const orbitTransform = `rotate(${(current.orbitTilt + orbitAngle + idle.orbit * 5).toFixed(2)} 110 111)`;
+    if (orbitTransform !== lastOrbitTransform) {
+      setAttr(orbitBack, 'transform', orbitTransform);
+      setAttr(orbitFront, 'transform', orbitTransform);
+      lastOrbitTransform = orbitTransform;
     }
-    context.clearRect(0, 0, 220, 220);
-    context.lineJoin = 'round';
-    context.lineCap = 'round';
-    context.fillStyle = gradients.shadow;
-    context.globalAlpha = clamp(current.shadowOpacity * 1.1, 0.04, 0.66);
-    context.beginPath();
-    context.ellipse(110, 194 - lift * 0.12, 61 * current.shadowScale * (1 - lift * 0.008), 7 * current.shadowScale, 0, 0, Math.PI * 2);
-    context.fill();
-    context.globalAlpha = 1;
-
-    const orbitOpacity = clamp(current.orbitOpacity + idle.orbit * 0.35 + impulse.sparkle * 0.15, 0, 1);
-    currentOrbitThickness = current.orbitThickness;
-    orbitAngle += current.orbitSpeed * dt * 90 * motionScale;
-    canvasOrbit(context, true, orbitOpacity, accent, current.orbitTilt);
-
-    context.save();
-    context.translate(110, 110);
-    context.rotate(rotation * Math.PI / 180);
-    context.transform(1, 0, Math.tan((current.bodySkew + gx * 1.7) * Math.PI / 180), 1, 0, 0);
-    context.scale(scaleX, scaleY);
-    context.translate(-110, -110 - lift);
-
-    canvasBlob(context, bodyPoints);
-    context.fillStyle = gradients.body;
-    context.globalAlpha = 1;
-    context.fill();
-    context.strokeStyle = '#273346';
-    context.lineWidth = 1.2;
-    context.stroke();
-
-    canvasBlob(context, bodyPoints);
-    // The alpha-tuned layers retain the glow without asking the software
-    // compositor to allocate a new screen-blend surface every frame.
-    context.globalCompositeOperation = 'source-over';
-    context.globalAlpha = clamp(0.18 + current.glow * 0.34 + current.pulse * 0.08, 0, 0.86);
-    context.fillStyle = gradients.sheen;
-    context.fill();
-
-    canvasHighlight(context, current);
-    context.globalAlpha = clamp(0.18 + current.glow * 0.58, 0, 0.88);
-    context.fillStyle = gradients.highlight;
-    context.fill();
-
-    canvasEnvironment(context);
-    context.globalAlpha = clamp(0.18 + current.glow * 0.4, 0, 0.74);
-    context.fillStyle = gradients.environment;
-    context.fill();
-
-    canvasBlob(context, bodyPoints);
-    context.globalAlpha = clamp(current.rimIntensity + current.glow * 0.08 + impulse.sparkle * 0.12, 0, 1);
-    context.strokeStyle = accent;
-    context.lineWidth = 1.4;
-    context.stroke();
-
-    context.restore();
-
-    canvasOrbit(context, false, orbitOpacity, accent, current.orbitTilt);
-    const pulseWave = current.pulse > 0.01 ? (0.5 + 0.5 * Math.sin(now / (reducedMotion ? 660 : 420))) * current.pulse : 0;
-    const particlePower = clamp(current.sparkle + impulse.sparkle + current.particleRate * 0.28 + pulseWave * 0.18, 0, 1);
-    context.fillStyle = accent;
+    orbitBack.style.opacity = clamp(current.orbitOpacity * 0.36, 0, 0.36).toFixed(3);
+    orbitFront.style.opacity = clamp(current.orbitOpacity * (0.64 + animatedPulse * 0.22), 0, 0.78).toFixed(3);
+    const particleAlpha = clamp(current.particleRate * (0.72 + impulse.sparkle * 0.8), 0, 0.68);
     particles.forEach((particle, index) => {
-      const phase = now / (720 + index * 87) + index * 1.7;
-      const opacity = particlePower * (0.28 + 0.72 * (0.5 + 0.5 * Math.sin(phase)));
-      const x = finite(particle.getAttribute('cx'), 110);
-      const y = finite(particle.getAttribute('cy'), 110);
-      context.globalAlpha = opacity;
-      context.beginPath();
-      context.arc(x, y, 0.65 + opacity * 1.2, 0, Math.PI * 2);
-      context.fill();
+      const phase = now / (760 + index * 95) + index * 0.71;
+      const driftX = Math.sin(phase) * (1.5 + current.particleLife * 2);
+      const driftY = Math.cos(phase * 0.82) * (1.5 + current.particleLife * 2);
+      setAttr(particle, 'transform', `translate(${driftX.toFixed(2)} ${driftY.toFixed(2)})`);
+      particle.style.opacity = (particleAlpha * (0.45 + 0.55 * (0.5 + 0.5 * Math.sin(phase * 1.7)))).toFixed(3);
     });
-    if (current.warning > 0.05) {
-      context.globalAlpha = clamp(current.warning * (0.45 + pulseWave * 0.65), 0, 1);
-      context.strokeStyle = accent;
-      context.lineWidth = 2.2;
-      context.beginPath();
-      context.moveTo(110, 143);
-      context.lineTo(110, 153);
-      context.moveTo(110, 159);
-      context.lineTo(110, 159.5);
-      context.stroke();
-    }
-    context.globalAlpha = 1;
-    if (cacheKey) {
-      if (sceneCache.has(cacheKey)) sceneCache.delete(cacheKey);
-      sceneCache.set(cacheKey, context.getImageData(0, 0, canvas.width, canvas.height));
-      while (sceneCache.size > SCENE_CACHE_LIMIT) {
-        sceneCache.delete(sceneCache.keys().next().value);
-      }
-      paintedCacheKey = cacheKey;
-    }
+    statusMark.style.opacity = clamp(current.warning * (0.35 + 0.45 * (0.5 + 0.5 * Math.sin(now / 180))) + current.sparkle * 0.14 + impulse.sparkle * 0.22, 0, 0.72).toFixed(3);
+
+    const rect = svg.getBoundingClientRect();
+    const width = rect.width || 220;
+    const height = rect.height || 220;
+    const scalePageX = width / 220;
+    const scalePageY = height / 220;
+    const bodyWidth = 140 * Math.abs(scaleX) * scalePageX;
+    const bodyHeight = 164 * Math.abs(scaleY) * scalePageY;
+    renderMetrics = {
+      rect: { x: rect.x, y: rect.y, width, height },
+      body: {
+        x: rect.x + (110 + idle.lean) * scalePageX - bodyWidth / 2,
+        y: rect.y + (29 - lift) * scalePageY,
+        width: bodyWidth,
+        height: bodyHeight,
+      },
+      gx,
+      gy,
+      eyePositions,
+      open: [current.eyeOpenL, current.eyeOpenR],
+      blink,
+      sx: eyeSx,
+      sy: eyeSy,
+      pupilX: clamp(gx * 6.2, -7.1, 7.1),
+      pupilY: clamp(gy * 5.6 - current.focus * 1.25, -6.5, 6.5),
+      pupilScale: clamp(0.82 + current.pupilFocus * 0.25, 0.74, 1.12),
+      bodyTransform,
+    };
   }
 
   function frame(now) {
-    if (!raf) return;
-    if (!lastFrame || now - lastFrame > 500) lastFrame = now;
+    raf = null;
+    if (document.hidden) return;
+    if (!lastFrame) lastFrame = now;
     const dt = clamp((now - lastFrame) / 1000, 0, 0.05);
     lastFrame = now;
-    interpolatePose(dt);
-    lastIdle = updateIdle(now);
-    lastBlink = updateBlink(now);
-    const impulseActive = (trickImpulse && now - trickImpulse.started < trickImpulse.duration)
-      || (releaseImpulse && now - releaseImpulse.started < releaseImpulse.duration);
-    const ambientActive = Boolean(idleAction || blinkUntil);
-    // Ambient breathing is compositor-only CSS. Avoid keeping a JavaScript
-    // RAF alive once the pose is settled; event methods restart it for the
-    // short gaze/release windows that need real-time sampling.
-    const needsFrame = paintRequested || impulseActive || ambientActive;
-    const paintInterval = ambientActive ? 80 : 32;
-    if (needsFrame
-        && now - lastPaint >= paintInterval) {
-      render(now, dt);
-      lastPaint = now;
-      paintRequested = false;
-    }
-    if (needsFrame) {
-      raf = requestAnimationFrame(frame);
-    } else {
-      raf = null;
-      lastFrame = 0;
-      scheduleAmbientWake(now);
-    }
+    render(now, dt);
+    raf = requestAnimationFrame(frame);
+  }
+
+  function clearAmbientTimer() {
+    if (ambientTimer) clearTimeout(ambientTimer);
+    ambientTimer = null;
   }
 
   function start() {
     clearAmbientTimer();
-    if (raf) return;
-    lastFrame = performance.now();
+    if (document.hidden || raf) return;
+    lastFrame = 0;
     raf = requestAnimationFrame(frame);
   }
 
   function stop() {
     clearAmbientTimer();
-    if (!raf) return;
-    cancelAnimationFrame(raf);
+    if (raf) cancelAnimationFrame(raf);
     raf = null;
     lastFrame = 0;
   }
@@ -664,27 +425,28 @@
     const safeKind = ['bounce', 'sway', 'spin', 'burst'].includes(kind) ? kind : '';
     if (!safeKind) return;
     const safeStrength = clamp(finite(strength, 1), 0, 1);
-    trickImpulse = { kind: safeKind, strength: safeStrength, started: performance.now(), duration: safeKind === 'burst' ? 720 : 900 };
+    trickImpulse = {
+      kind: safeKind,
+      strength: safeStrength,
+      started: performance.now(),
+      duration: safeKind === 'burst' ? 720 : 900,
+    };
     markInteraction(safeStrength);
+    start();
   }
 
   function setState(name) {
     const safeName = defs[name] ? name : 'idle';
     persistentState = safeName;
-    const locked = ['listening', 'dictating', 'loading', 'thinking', 'working', 'writing', 'sending', 'dragging', 'powering-down'];
-    if (sequenceTimer && (locked.includes(safeName) || locked.includes(visualState))) {
-      clearTimeout(sequenceTimer);
-      sequenceTimer = null;
-      sequenceToken += 1;
-    }
+    clearSequence();
     setTargets(safeName);
-    if (safeName !== 'idle') markInteraction(0.2);
+    markInteraction(0.2);
     start();
   }
 
   function sequence(steps) {
     const list = Array.isArray(steps) ? steps.filter(step => step && defs[step.state]) : [];
-    clearTimeout(sequenceTimer);
+    clearSequence();
     const token = ++sequenceToken;
     let index = 0;
     function next() {
@@ -692,10 +454,12 @@
       if (index >= list.length) {
         sequenceTimer = null;
         setTargets(persistentState);
+        start();
         return;
       }
       const step = list[index++];
       setTargets(step.state);
+      markInteraction(0.18);
       runTrick(step.trick || '', step.strength == null ? 1 : step.strength);
       const duration = clamp(finite(step.ms, 900), 1, 30000);
       sequenceTimer = setTimeout(next, duration);
@@ -704,10 +468,16 @@
     next();
   }
 
-  function enter() {
-    sequence([{ state: 'spawning', ms: 520, trick: 'burst', strength: 0.76 },
-      { state: 'waking', ms: 880, trick: '' },
-      { state: 'idle', ms: 460, trick: '' }]);
+  function enter(source = 'desktop', context = null) {
+    // `source` and `context` intentionally remain data-only extension points
+    // for a future robot handoff. Desktop uses the same choreography.
+    void source;
+    void context;
+    sequence([
+      { state: 'spawning', ms: 520, trick: 'burst', strength: 0.68 },
+      { state: 'waking', ms: 760 },
+      { state: 'idle', ms: 520 },
+    ]);
   }
 
   function setGaze(x, y, width, height) {
@@ -724,56 +494,44 @@
     }
     gaze.targetX = tx;
     gaze.targetY = ty;
-    gaze.x = tx;
-    gaze.y = ty;
-    gaze.vx = 0;
-    gaze.vy = 0;
-    gazeReturnToken += 1;
+    gaze.active = true;
+    gaze.input = { x: finite(x), y: finite(y), width: viewWidth, height: viewHeight, nx, ny, active: true };
     if (gazeReturnTimer) {
       clearTimeout(gazeReturnTimer);
       gazeReturnTimer = null;
     }
-    face.classList.remove('gaze-return');
-    gaze.active = true;
-    gaze.input = { x: finite(x), y: finite(y), width: viewWidth, height: viewHeight, nx, ny, active: true };
-    paintRequested = true;
     start();
   }
 
   function clearGaze() {
     gaze.targetX = 0;
     gaze.targetY = 0;
-    gaze.x = 0;
-    gaze.y = 0;
-    gaze.vx = 0;
-    gaze.vy = 0;
-    const token = ++gazeReturnToken;
-    face.classList.add('gaze-return');
-    if (gazeReturnTimer) clearTimeout(gazeReturnTimer);
-    gazeReturnTimer = setTimeout(() => {
-      if (token === gazeReturnToken) {
-        face.classList.remove('gaze-return');
-        gazeReturnTimer = null;
-      }
-    }, 420);
     gaze.active = false;
     gaze.input = { x: gaze.input.width / 2, y: gaze.input.height / 2, width: gaze.input.width, height: gaze.input.height, nx: 0.5, ny: 0.5, active: false };
-    paintRequested = true;
+    const token = ++gazeReturnToken;
+    if (gazeReturnTimer) clearTimeout(gazeReturnTimer);
+    gazeReturnTimer = setTimeout(() => {
+      if (token === gazeReturnToken) gazeReturnTimer = null;
+    }, 460);
     start();
   }
 
   function dragRelease(kind, strength) {
-    if (kind !== 'bounce' && kind !== 'sway') return;
-    releaseImpulse = { kind, strength: clamp(finite(strength), 0, 1), started: performance.now(), duration: kind === 'bounce' ? 820 : 900 };
+    if (!['bounce', 'sway'].includes(kind)) return;
+    releaseImpulse = {
+      kind,
+      strength: clamp(finite(strength), 0, 1),
+      started: performance.now(),
+      duration: kind === 'bounce' ? 820 : 900,
+    };
     markInteraction(releaseImpulse.strength);
-    paintRequested = true;
     start();
   }
 
   function snapshot() {
     return {
       state: visualState,
-      mode: 'hold',
+      mode: sequenceTimer ? 'sequence' : 'hold',
       persistentState,
       sequenceActive: Boolean(sequenceTimer),
       reducedMotion,
@@ -782,7 +540,7 @@
         ambientTimerActive: Boolean(ambientTimer),
         sequenceTimerActive: Boolean(sequenceTimer),
         gazeReturnTimerActive: Boolean(gazeReturnTimer),
-        sceneCacheEntries: sceneCache.size,
+        sceneCacheEntries: 0,
       },
     };
   }
@@ -792,67 +550,44 @@
       target: { x: gaze.targetX, y: gaze.targetY },
       pointer: { x: gaze.x, y: gaze.y },
       input: Object.assign({}, gaze.input),
-      pose: { turn: pose.current.bodyRotation + gaze.x * 4.2, tilt: gaze.y * 4.3, roll: pose.current.bodySkew },
+      pose: { turn: pose.current.bodyRotation + gaze.x * 1.65, tilt: gaze.y * 2.6, roll: pose.current.bodySkew },
     };
   }
 
   function renderSnapshot() {
-    const svgRect = (canvas || svg).getBoundingClientRect();
-    const width = svgRect.width || 220;
-    const height = svgRect.height || 220;
-    const scaleX = width / 220;
-    const scaleY = height / 220;
-    const current = pose.current;
-    const influence = clamp(current.gazeInfluence, 0, 1);
-    const scan = (visualState === 'searching' || visualState === 'radar') ? Math.sin(performance.now() / 260) * 0.16 : 0;
-    const gx = clamp((gaze.x + scan) * influence, -1, 1);
-    const gy = clamp(gaze.y * influence, -1, 1);
-    const bodyWidth = 160 * Math.abs(current.bodyScaleX) * scaleX;
-    const bodyHeight = 172 * Math.abs(current.bodyScaleY) * scaleY;
-    const bodyRect = {
-      x: svgRect.x + (110 * scaleX - bodyWidth / 2),
-      y: svgRect.y + (110 * scaleY - bodyHeight / 2),
-      width: bodyWidth,
-      height: bodyHeight,
-    };
-    const eyeSpacing = 26 + current.eyeSpacing;
-    const faceY = 101 + current.faceOffsetY + gy * 4.3;
-    const blink = visualState === 'sleeping' ? 0.2 : 1;
-    const eyePositions = [-1, 1].map(side => ({
-      x: 110 + side * eyeSpacing + gx * 9.5,
-      y: faceY + Math.abs(gx) * 0.7,
-      angle: side * gx * 2.8 + gy * 1.2,
-    }));
-    const eyeSnapshots = eyePositions.map((position, index) => {
-      const open = (index === 0 ? current.eyeOpenL : current.eyeOpenR) * blink;
-      const eyeScaleX = current.eyeScaleX * (1 + Math.abs(gx) * 0.025);
-      const eyeScaleY = current.eyeScaleY * clamp(open, 0.05, 1.28);
-      const eyeWidth = 40 * eyeScaleX * scaleX;
-      const eyeHeight = 30 * eyeScaleY * scaleY;
-      const pupilX = clamp(gx * 7.6 + (index === 0 ? -1 : 1) * gx * 0.65, -8.2, 8.2);
-      const pupilY = clamp(gy * 5.8 - current.focus * 1.4, -6.8, 6.8);
-      const pupilScale = clamp(0.82 + current.pupilFocus * 0.28, 0.76, 1.16);
+    if (!renderMetrics) {
+      render(0, 0);
+      renderMetrics = renderMetrics || { rect: { x: 0, y: 0, width: 220, height: 220 }, body: { x: 40, y: 29, width: 140, height: 164 }, gx: 0, gy: 0, eyePositions: [{ x: 77, y: 101 }, { x: 133, y: 101 }], open: [1, 1], blink: 1, sx: 1, sy: 1, pupilX: 0, pupilY: 0, pupilScale: 0.92, bodyTransform: '' };
+    }
+    const metrics = renderMetrics;
+    const scaleX = metrics.rect.width / 220;
+    const scaleY = metrics.rect.height / 220;
+    const eyesSnapshot = metrics.eyePositions.map((position, index) => {
+      const open = metrics.open[index] * metrics.blink;
+      const eyeScaleY = metrics.sy * clamp(open, 0.05, 1.24);
+      const eyeWidth = 44 * metrics.sx * scaleX;
+      const eyeHeight = 28 * eyeScaleY * scaleY;
+      const pupilX = clamp(metrics.gx * 6.2 + (index === 0 ? metrics.gx * 0.28 : metrics.gx * 0.62), -7.1, 7.1);
+      const pupilY = metrics.pupilY;
       return {
-        x: svgRect.x + position.x * scaleX - eyeWidth / 2,
-        y: svgRect.y + position.y * scaleY - eyeHeight / 2,
+        x: metrics.rect.x + position.x * scaleX - eyeWidth / 2,
+        y: metrics.rect.y + position.y * scaleY - eyeHeight / 2,
         width: eyeWidth,
         height: eyeHeight,
-        transform: `translate(${position.x.toFixed(2)} ${position.y.toFixed(2)}) rotate(${position.angle.toFixed(2)}) scale(${eyeScaleX.toFixed(4)} ${eyeScaleY.toFixed(4)})`,
-        dLength: 150,
-        pupil: `translate(${pupilX.toFixed(2)} ${pupilY.toFixed(2)}) scale(${pupilScale.toFixed(3)})`,
+        transform: `translate(${position.x.toFixed(2)} ${position.y.toFixed(2)}) rotate(${(position.angle || 0).toFixed(2)}) scale(${metrics.sx.toFixed(4)} ${eyeScaleY.toFixed(4)})`,
+        pupil: `translate(${pupilX.toFixed(2)} ${pupilY.toFixed(2)}) scale(${metrics.pupilScale.toFixed(3)})`,
       };
     });
-    if (!shapePath) shapePath = blobPath(pointsForMorph(current.morph));
     return {
       target: { x: gaze.targetX, y: gaze.targetY },
       pointer: { x: gaze.x, y: gaze.y },
       input: Object.assign({}, gaze.input),
-      pose: { turn: pose.current.bodyRotation + gaze.x * 4.2, tilt: gaze.y * 4.3, roll: pose.current.bodySkew },
-      svg: { x: svgRect.x, y: svgRect.y, width, height },
-      groupTransform: lastSnapshotGroupTransform || lastGroupTransform,
-      bodyPath: shapePath,
-      body: { x: bodyRect.x, y: bodyRect.y, width: bodyRect.width, height: bodyRect.height },
-      eyes: eyeSnapshots,
+      pose: { turn: pose.current.bodyRotation + gaze.x * 1.65, tilt: gaze.y * 2.6, roll: pose.current.bodySkew },
+      svg: metrics.rect,
+      groupTransform: metrics.bodyTransform,
+      bodyPath: blobPath(pointsForMorph(pose.current.morph)),
+      body: metrics.body,
+      eyes: eyesSnapshot,
     };
   }
 
@@ -867,6 +602,7 @@
     sequence,
     react: (state, trick = '', duration = 2600) => sequence([{ state, trick, ms: duration }]),
     enter,
+    handoff_enter: enter,
     gaze: setGaze,
     clearGaze,
     dragRelease,

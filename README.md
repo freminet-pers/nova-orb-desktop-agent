@@ -19,7 +19,9 @@
 
 ![Nova Orb preview](04_桌面桌宠程序/02_角色图片与动画/品牌图标/Nova_Orb_preview.png)
 
-> Nova Orb 是一个 Windows 优先的桌面个人 AI 助理：它把聊天、受限电脑操作、本地语音、唤醒、个人记忆和一个常驻桌面的可视化角色放在一起。当前版本是功能验证与公开预览版，仍然在快速迭代。
+![Nova v0.2.0 idle view](docs/images/nova-v0.2.0-idle.png)
+
+> Nova Orb 是一个 Windows 优先的桌面个人 AI 助理：它把聊天、受限电脑操作、本地语音、唤醒、个人记忆和一个常驻桌面的可视化角色放在一起。v0.2.0 是一次以“精灵冠”视觉方向为核心的公开预览更新，同时保留 v0.1.0 的行为与桥接协议。
 
 ## 项目简介
 
@@ -40,9 +42,9 @@ Nova Orb 的目标不是把一个聊天窗口缩小到桌面角落，而是让�
 
 仓库代码中的技术标识和部分注释使用英文，但产品界面、默认提示词和主要文档目前是中文优先。项目当前没有完整的英文 UI、英文文档和本地化资源；README 保留一个简短的 English summary，方便非中文读者判断项目定位。完整国际化不属于当前版本范围。
 
-### 关于当前形象（诚实状态）
+### 关于 v0.2.0 形象
 
-现在这版形象主要用于验证交互、状态映射和桌面运行稳定性，视觉完成度还不够高，确实比较丑，也不是最终品牌稿。下一版的主要迭代目标就是重新设计 Nova 的形象：包括轮廓、材质、表情、动效层次和整体识别度。当前版本会保留，作为后续视觉迭代的可比较基线。
+v0.2.0 锁定“精灵冠”方向：暖象牙色的非对称低双峰凝胶轮廓、烟灰胶囊眼腔、柔和散射和极少量状态光。角色仍然是低打扰的桌面陪伴，而不是高频动画吉祥物；原有 39 个状态名和 Python→QWebChannel 桥接继续兼容。
 
 ## 核心能力
 
@@ -62,12 +64,12 @@ Nova Orb 的目标不是把一个聊天窗口缩小到桌面角落，而是让�
 ### 方式一：下载 Windows Release（推荐）
 
 1. 打开 [最新 Release](https://github.com/freminet-pers/nova-orb-desktop-agent/releases/latest)。
-2. 下载 NovaOrb-2026.09.15-windows-x64.zip。
+2. 下载 `NovaOrb-v0.2.0-Windows-x64.zip`。
 3. 将 ZIP 解压到一个你有读写权限的目录。它是便携式 onedir 包，不会自动写入系统安装器或注册表。
-4. 双击 04_桌面桌宠程序/05_可运行版本/启动Nova.cmd 启动桌宠。
-5. 双击 打开Nova设置.cmd 配置 API、语音、唤醒词和本地声纹。
+4. 在解压后的包根目录双击 `启动Nova.cmd` 启动桌宠。
+5. 双击 `打开Nova设置.cmd` 配置 API、语音、唤醒词和本地声纹。
 
-当前便携包包含 Qt、Python 运行库和本地语音模型，体积约 1.4 GB。第一次启动可能受到 Windows SmartScreen、杀毒软件或麦克风权限提示影响；这是未签名个人预览包的正常现象，请按自己的安全策略确认后运行。
+当前便携包包含 Qt、Python 运行库和本地语音模型，解压后约 1.4 GB，Release ZIP 约 0.76 GB。第一次启动可能受到 Windows SmartScreen、杀毒软件或麦克风权限提示影响；这是未签名个人预览包的正常现象，请按自己的安全策略确认后运行。
 
 > Release 中的包是“便携式安装包”，不是 MSI 或安装向导。关闭程序后可以直接移动或删除整个解压目录；用户数据默认保存在 %LOCALAPPDATA%/CocoDesktop，不会写回 Release 目录。
 
@@ -98,7 +100,7 @@ python -m coco
 python -m coco.prepare_voice
 ```
 
-启动后打开“设置”，填写 API Base URL、模型名和 API Key。API Key 默认只在内存中使用；只有主动勾选记住时才会通过 Windows DPAPI 保存到当前用户数据目录。不要把 Key 写进源码、JSON、Issue、日志或 Release 资产。
+启动后打开“模型与联网”，填写 API Base URL、模型名和 API Key。API Key 默认只在内存中使用；只有主动勾选记住时才会通过 Windows DPAPI 保存到当前用户数据目录。不要把 Key 写进源码、JSON、Issue、日志或 Release 资产。
 
 ## 从源码构建 Windows 包
 
@@ -106,13 +108,12 @@ python -m coco.prepare_voice
 
 ```powershell
 cd 04_桌面桌宠程序/01_程序源码
-python -m pip install -r requirements-build.txt
 python tools/render_nova_brand_assets.py
 python -m coco.prepare_voice
 python -m PyInstaller --clean --noconfirm coco_multi.spec
 ```
 
-输出目录为 dist/NovaOrb/。将它与 05_可运行版本/启动Nova.cmd、05_可运行版本/打开Nova设置.cmd 一起作为便携包分发。coco_multi.spec 会收集 QtWebEngine、Nova 品牌资源、Whisper 和可选声纹模型；数据库、密钥、声纹档案、日志、测试缓存和个人素材不会被收集。
+输出目录为 `dist/NovaOrb/`。将它与 `05_可运行版本/启动Nova.cmd`、`05_可运行版本/打开Nova设置.cmd` 放在发布包根目录。`coco_multi.spec` 会收集 QtWebEngine、Nova 品牌资源、Whisper 和可选声纹模型；数据库、密钥、声纹档案、日志、测试缓存和个人素材不会被收集。
 
 源代码仓库不提交 Whisper、CAM++ 或其他模型大文件。这样做既避免把第三方模型许可和大文件混进 Git 历史，也让使用者可以按自己的许可与网络条件准备模型。模型来源和完整注意事项见 THIRD_PARTY_NOTICES.md。
 
@@ -172,7 +173,7 @@ node --check coco/web/nova_renderer.js
 node --check coco/web/nova_bridge.js
 ```
 
-最近一次基线结果：125 项 unittest 通过，助理 UI smoke 和完整 UI smoke 通过。真实用户电脑上的 Explorer 独立启动、不同 DPI、多显示器边界、音频设备和显卡驱动仍需要在目标设备上确认。
+最近一次 v0.2.0 结果：125 项 unittest 通过，助理 UI smoke 通过，定向 WebEngine 探针覆盖 8 向 gaze、拖拽回弹、透明交互层和 850×650 设置页。完整 UI smoke 在最终 gaze 增益调整前命中过时的对角线阈值，按本轮“一次完整 smoke”纪律未重复运行；目标 Windows 电脑仍需确认 Explorer 独立启动、不同 DPI、多显示器边界、音频设备和显卡驱动。
 
 ## 仓库结构
 
@@ -196,13 +197,12 @@ node --check coco/web/nova_bridge.js
 
 ## Roadmap
 
-下一版最重要的迭代是视觉形象重做，而不是继续堆功能。重点包括：
+v0.3.0 的重点是把 v0.2.0 的视觉与运行时验证推进到真实 Windows 设备：
 
-1. 重做 Nova 的主体轮廓、材质和表情，让它从“能动的原型”变成更有辨识度的角色；
-2. 统一不同状态下的视觉语言，减少当前轨道、粒子和高光之间的拼接感；
-3. 在保持低占用和离线渲染的前提下，补充更自然的微动作；
-4. 在真实 Windows 设备上继续验证 DPI、多显示器、音频权限和长时间运行；
-5. 再评估英文 UI、本地化文档以及更正式的安装器格式。
+1. 继续校准不同 DPI、多显示器、桌面背景和显卡驱动下的透明窗口表现；
+2. 补充更自然但仍然低频的微动作和状态过渡；
+3. 完善便携包的安装说明、签名策略和模型许可记录；
+4. 再评估英文 UI、本地化文档以及更正式的安装器格式。
 
 详见 docs/ROADMAP.md。
 
@@ -210,18 +210,18 @@ node --check coco/web/nova_bridge.js
 
 Nova Orb is a Windows-first desktop personal AI assistant with a small always-present visual companion. It combines an OpenAI-compatible chat endpoint, local Whisper speech recognition, optional wake-word and speaker verification, personal memory, and a deliberately constrained set of desktop tools.
 
-The visual layer is rendered offline with Qt WebEngine, SVG, CSS, and JavaScript. The Agent does not expose arbitrary shell or PowerShell execution. User data, API keys, recordings, databases, and speaker profiles are kept outside the public source snapshot.
+The visual layer is rendered offline with Qt WebEngine, SVG, CSS, and JavaScript. Version 0.2.0 introduces the warm ivory “faerie crown” role direction while retaining the v0.1.0 bridge and state names. The Agent does not expose arbitrary shell or PowerShell execution. User data, API keys, recordings, databases, and speaker profiles are kept outside the public source snapshot.
 
-This project is currently Chinese-first: the UI, default prompts, and main documentation are Chinese, and there is no complete English localization yet. The current character is an early visual prototype and is not polished; the next major iteration will focus on redesigning the character and its visual language.
+This project is currently Chinese-first: the UI, default prompts, and main documentation are Chinese, and there is no complete English localization yet.
 
 ## 版本与发布
 
-- 首个公开预览：v0.1.0；
-- 构建身份：2026.09.15-nova-orb；
-- Release 资产：NovaOrb-2026.09.15-windows-x64.zip；
+- 当前公开预览：v0.2.0；
+- 构建身份：nova-v0.2.0-20260921；
+- Release 资产：`NovaOrb-v0.2.0-Windows-x64.zip`；
 - 发布形式：Windows x64 便携式 onedir ZIP，不是 MSI；
 - 变更记录：CHANGELOG.md；
-- 发布说明和 SHA-256：见 GitHub Releases。
+- 发布说明、SHA-256 和安装包：见 [GitHub Releases](https://github.com/freminet-pers/nova-orb-desktop-agent/releases/tag/v0.2.0)。
 
 ## 贡献
 

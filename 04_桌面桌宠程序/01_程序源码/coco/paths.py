@@ -9,8 +9,8 @@ SOURCE_ROOT = Path(__file__).resolve().parents[3] if not FROZEN else None
 BUNDLE = Path(sys._MEIPASS) if FROZEN else Path(__file__).resolve().parents[1]
 APP_DIR = Path(sys.executable).parent if FROZEN else BUNDLE
 ROOT = SOURCE_ROOT if not FROZEN else APP_DIR
-PACKAGE_SIGNATURE = 'nova-original-visual-20260915'
-INSTANCE_DIR_NAME = 'NovaOrbDesktop'
+PACKAGE_SIGNATURE = 'nova-v0.2.0-20260921'
+INSTANCE_DIR_NAME = 'NovaOrbDesktop-v020'
 if FROZEN:
     default_data = Path(os.environ.get('LOCALAPPDATA', Path.home())) / 'CocoDesktop'
     DATA = Path(os.environ.get('COCO_DATA_DIR', str(default_data))).expanduser()

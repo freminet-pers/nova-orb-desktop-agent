@@ -22,6 +22,7 @@
     clearGaze: () => call('clearGaze'),
     dragRelease: (kind, strength) => call('dragRelease', [kind, strength]),
     enter: () => call('enter'),
+    handoff_enter: (source, context) => call('handoff_enter', [source, context]),
   };
 
   function actionBridge(bridge, name) {

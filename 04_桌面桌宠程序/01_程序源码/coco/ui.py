@@ -56,34 +56,42 @@ SPEAKER_EXAMPLES = (
 )
 
 STYLE = """
-QWidget { color: #35463c; font-family: 'Microsoft YaHei UI'; font-size: 13px; }
-QWidget#home { background: #f8f7f2; }
-QFrame#garden { background: #eef1eb; border-radius: 18px; }
-QLabel#eyebrow { color: #71816c; font-size: 11px; letter-spacing: 2px; }
-QLabel#title { font-family: 'Segoe UI'; font-size: 36px; font-weight: 600; color: #354d3e; }
-QLabel#muted { color: #7b8478; font-size: 12px; }
-QLabel#status { background: #f8faf0; border-radius: 12px; padding: 6px 12px; color: #5b7753; }
-QPushButton { min-height: 18px; background: #eeeee5; border: 1px solid #dfe3d7; border-radius: 10px; padding: 9px 13px; }
-QPushButton:hover { background: #e2e8d8; border-color: #a1b499; }
-QPushButton:pressed { background: #cad8c0; }
-QPushButton:disabled { color: #9ba195; background: #eeeee9; }
-QPushButton#primary { color: white; background: #536f52; border: 0; }
-QPushButton#primary:hover { background: #415e40; }
+QWidget { color: #3d3b35; font-family: 'Microsoft YaHei UI'; font-size: 13px; }
+QWidget#home { background: #f5f2eb; }
+QLabel#eyebrow { color: #9a765f; font-family: 'Georgia'; font-size: 11px; letter-spacing: 2px; }
+QLabel#title { font-family: 'Georgia'; font-size: 30px; font-weight: 600; color: #4d463d; }
+QLabel#muted { color: #817d73; font-size: 12px; }
+QLabel#field-label { color: #686258; font-size: 11px; font-weight: 600; padding: 3px 1px 1px; }
+QLabel#section-intro { color: #5f5a51; font-size: 14px; font-weight: 600; }
+QLabel#status { background: #edf0e7; border: 1px solid #dce1d5; border-radius: 12px; padding: 6px 12px; color: #687b64; }
+QFrame#card { background: #fffdf8; border: 1px solid #e6dfd4; border-radius: 13px; }
+QPushButton { min-height: 18px; background: #eeece4; border: 1px solid #ded9ce; border-radius: 9px; padding: 8px 12px; }
+QPushButton:hover { background: #e7eadf; border-color: #b7c2ae; }
+QPushButton:pressed { background: #d8dfd0; }
+QPushButton:disabled { color: #aaa69e; background: #efede8; }
+QPushButton#primary { color: #fffdf8; background: #6f8068; border: 0; }
+QPushButton#primary:hover { background: #5e715a; }
 QPushButton#small { padding: 5px 9px; font-size: 12px; }
-QTabWidget::pane { border: 0; }
-QTabBar::tab { color: #7c857a; padding: 12px 11px; border-bottom: 2px solid transparent; }
-QTabBar::tab:selected { color: #3d583e; border-bottom: 2px solid #65845d; }
-QTextBrowser, QListWidget { border: 1px solid #e6e8df; border-radius: 12px; background: #fffefa; padding: 12px; }
-QListWidget::item { padding: 9px; border-bottom: 1px solid #eff0e9; }
-QListWidget::item:selected { background: #e0e9d8; color: #344d37; border-radius: 6px; }
-QLineEdit { padding: 11px; border-radius: 9px; border: 1px solid #dbe0d3; background: #fffefa; selection-background-color: #7e9670; }
-QLineEdit:focus { border-color: #7e9670; }
-QProgressBar { border: 0; border-radius: 4px; background: #d9dfd0; min-height: 7px; max-height: 7px; }
-QProgressBar::chunk { border-radius: 4px; background: #879e75; }
-QCheckBox { spacing: 8px; padding: 6px 0; }
-QMenu { background: #fffefa; border: 1px solid #d8dfd0; padding: 6px; }
+QPushButton#section-toggle { text-align: left; color: #625d53; background: transparent; border: 0; border-bottom: 1px solid #e8e2d8; border-radius: 0; padding: 9px 2px; font-weight: 600; }
+QPushButton#section-toggle:hover { color: #6f8068; background: #faf8f2; }
+QTabWidget::pane { border: 0; background: transparent; }
+QTabBar { qproperty-drawBase: 0; }
+QTabBar::tab { color: #8a8479; background: transparent; padding: 9px 16px 10px; min-width: 72px; border-bottom: 2px solid transparent; }
+QTabBar::tab:hover { color: #6f8068; }
+QTabBar::tab:selected { color: #52654d; border-bottom: 2px solid #8c9d80; font-weight: 600; }
+QTextBrowser, QListWidget { border: 1px solid #e5dfd5; border-radius: 11px; background: #fffdf8; padding: 12px; }
+QListWidget::item { padding: 8px; border-bottom: 1px solid #f0ece5; }
+QListWidget::item:selected { background: #e7ede1; color: #53664e; border-radius: 6px; }
+QLineEdit, QComboBox { padding: 9px 10px; border-radius: 8px; border: 1px solid #ded8cd; background: #fffdf8; selection-background-color: #a7b399; }
+QLineEdit:focus, QComboBox:focus { border-color: #93a387; }
+QComboBox::drop-down { border: 0; width: 24px; }
+QProgressBar { border: 0; border-radius: 4px; background: #dde4d7; min-height: 7px; max-height: 7px; }
+QProgressBar::chunk { border-radius: 4px; background: #8b9c7e; }
+QCheckBox { spacing: 8px; padding: 5px 0; }
+QMenu { background: #fffdf8; border: 1px solid #ded8cd; padding: 6px; }
 QMenu::item { padding: 8px 20px; }
-QMenu::item:selected { background: #e0e9d8; }
+QMenu::item:selected { background: #e7ede1; }
+QScrollArea { border: 0; background: transparent; }
 """
 
 
@@ -156,45 +164,30 @@ class HomeWindow(QWidget):
         super().__init__(None, Qt.WindowType.Window)
         self.c = controller
         self.setObjectName("home")
-        self.setWindowTitle(f"Nova · 聊天与设置 · {__version__}")
+        self.setWindowTitle(f"Nova · 个人助理 · {__version__}")
         # The desktop character owns the always-on-top behavior.  The settings
         # panel is a normal top-level window so another Windows app can take
         # focus and cover it until the user explicitly opens the panel again.
-        self.resize(920, 700)
+        self.resize(930, 700)
         self.setMinimumSize(850, 650)
         outer = QVBoxLayout(self)
-        outer.setContentsMargins(26, 18, 26, 18)
+        outer.setContentsMargins(24, 16, 24, 14)
+        outer.setSpacing(8)
         top = QHBoxLayout()
-        top.addWidget(label("NOVA  /  电脑端 AI 助理", "eyebrow"))
+        top.setSpacing(10)
+        top.addWidget(label("NOVA  /  个人助理", "eyebrow"))
         top.addStretch()
-        top.addWidget(button("回到桌面", self.hide))
-        outer.addLayout(top)
-        row = QHBoxLayout()
-        row.setSpacing(22)
-        outer.addLayout(row, 1)
-        garden = QFrame()
-        garden.setObjectName("garden")
-        garden.setMinimumWidth(252)
-        left = QVBoxLayout(garden)
-        left.setSizeConstraint(QLayout.SizeConstraint.SetMinimumSize)
-        left.setContentsMargins(22, 24, 22, 24)
-        left.addWidget(label("Nova.", "title"))
-        left.addWidget(label("电脑端 AI 助理", "muted"))
-        left.addSpacing(24)
         self.status = label("●  随时帮你处理电脑上的小事", "status")
         self.status.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        left.addWidget(self.status)
-        left.addSpacing(12)
-        left.addWidget(label("聊天 · 语音 · 应用 · 记忆", "muted", True))
-        left.addStretch()
-        garden_scroll = QScrollArea()
-        garden_scroll.setWidgetResizable(True)
-        garden_scroll.setFrameShape(QFrame.Shape.NoFrame)
-        garden_scroll.setFixedWidth(286)
-        garden_scroll.setWidget(garden)
-        row.addWidget(garden_scroll)
+        top.addWidget(self.status)
+        top.addWidget(button("回到桌面", self.hide))
+        outer.addLayout(top)
         self.tabs = QTabWidget()
-        row.addWidget(self.tabs, 1)
+        self.tabs.setDocumentMode(True)
+        self.tabs.setTabPosition(QTabWidget.TabPosition.North)
+        self.tabs.setUsesScrollButtons(False)
+        self.tabs.setElideMode(Qt.TextElideMode.ElideNone)
+        outer.addWidget(self.tabs, 1)
         self.build_chat()
         self.build_apps()
         self.build_diary()
@@ -202,7 +195,7 @@ class HomeWindow(QWidget):
         self.build_voice()
 
         footer = QHBoxLayout()
-        footer.addWidget(label("聊天、语音与应用启动。", "muted"))
+        footer.addWidget(label("聊天、应用、记忆、联网与语音。", "muted"))
         footer.addStretch()
         self.mode = label("本地互动 · 记忆已开启", "muted")
         footer.addWidget(self.mode)
@@ -538,26 +531,101 @@ class HomeWindow(QWidget):
     def build_settings(self):
         page = QWidget()
         layout = QVBoxLayout(page)
-        layout.setContentsMargins(0, 17, 0, 0)
-        layout.addWidget(label("让 Nova 更懂你"))
-        layout.addWidget(label("DeepSeek · 兼容 OpenAI 的聊天接口", "muted"))
-        form = QFormLayout()
-        form.setVerticalSpacing(12)
+        layout.setContentsMargins(8, 10, 8, 14)
+        layout.setSpacing(10)
+        layout.addWidget(label("模型与联网", "section-intro"))
+        layout.addWidget(label("先打开核心开关；接口、搜索和 Agent 细节按需展开。", "muted", True))
+
+        def field(title, widget, hint=None):
+            box = QWidget()
+            box_layout = QVBoxLayout(box)
+            box_layout.setContentsMargins(0, 0, 0, 0)
+            box_layout.setSpacing(3)
+            box_layout.addWidget(label(title, "field-label"))
+            box_layout.addWidget(widget)
+            if hint:
+                box_layout.addWidget(label(hint, "muted", True))
+            return box
+
+        def collapsible(title, content, expanded=False):
+            toggle = QPushButton()
+            toggle.setObjectName("section-toggle")
+            toggle.setCheckable(True)
+            toggle.setChecked(expanded)
+
+            def sync(checked):
+                content.setVisible(checked)
+                toggle.setText(("⌄" if checked else "›") + "  " + title)
+
+            toggle.toggled.connect(sync)
+            sync(expanded)
+            layout.addWidget(toggle)
+            layout.addWidget(content)
+            return toggle
+
         config = self.c.service.setting("model_config", {})
         if not isinstance(config, dict):
             config = {}
+
+        core = QFrame()
+        core.setObjectName("card")
+        core_layout = QVBoxLayout(core)
+        core_layout.setContentsMargins(14, 11, 14, 11)
+        core_layout.setSpacing(3)
+        self.cloud = QCheckBox("启用 API 自由聊天")
+        self.cloud.setChecked(config.get("enabled", False))
+        core_layout.addWidget(self.cloud)
+        self.agent_enabled = QCheckBox("允许 Nova 使用受限电脑工具（只响应明确请求）")
+        self.agent_enabled.setChecked(config.get("agent_enabled", True))
+        core_layout.addWidget(self.agent_enabled)
+        self.on_top = QCheckBox("桌宠保持置顶")
+        self.on_top.setChecked(self.c.service.setting("on_top", True))
+        core_layout.addWidget(self.on_top)
+        core_layout.addWidget(label("受限 Agent 只使用已发现或你明确添加的应用入口，不提供任意 shell。", "muted", True))
+        layout.addWidget(core)
+
+        api_content = QFrame()
+        api_content.setObjectName("card")
+        api_layout = QVBoxLayout(api_content)
+        api_layout.setContentsMargins(14, 12, 14, 12)
+        api_layout.setSpacing(8)
         self.base = QLineEdit(config.get("base_url", "https://api.deepseek.com"))
         self.model = ModelCombo()
         self.model.setEditable(True)
         model_value = str(config.get("model", "deepseek-flash") or "deepseek-flash")
-        self.model.addItems([model_value, "deepseek-flash", "deepseek-v4-flash", "deepseek-v4-pro", "deepseek-v4-flash-vision-exp"])
+        model_values = list(dict.fromkeys([model_value, "deepseek-flash", "deepseek-v4-flash", "deepseek-v4-pro", "deepseek-v4-flash-vision-exp"]))
+        self.model.addItems(model_values)
         self.model.setCurrentText(model_value)
         self.key = QLineEdit()
         self.key.setEchoMode(QLineEdit.EchoMode.Password)
         self.key.setPlaceholderText("已保存（留空保持）" if self.c.api_key_saved else "输入 API Key（默认加密保存）")
-        form.addRow("API 地址", self.base)
-        form.addRow("模型名称", self.model)
-        form.addRow("API Key", self.key)
+        api_layout.addWidget(field("API 地址", self.base, "默认面向 DeepSeek 的 OpenAI-compatible endpoint。"))
+        api_layout.addWidget(field("模型名称", self.model, "可手填自定义模型；刷新不会覆盖当前选择。"))
+        api_layout.addWidget(field("API Key", self.key, "密钥不会写入 SQLite；可使用 Windows 账户 DPAPI 加密保存。"))
+        model_actions = QHBoxLayout()
+        self.refresh_models_button = button("从当前 API 刷新模型", self.c.refresh_models)
+        model_actions.addWidget(self.refresh_models_button)
+        self.models_hint = label("模型列表为可选建议。", "muted", True)
+        model_actions.addWidget(self.models_hint, 1)
+        api_layout.addLayout(model_actions)
+        self.remember_key = QCheckBox("使用 Windows 账户加密保存 API Key")
+        can_store_key = secure_store_available()
+        remember_default = bool(self.c.service.setting("remember_cloud_credential", can_store_key))
+        self.remember_key.setChecked(self.c.api_key_saved or remember_default)
+        self.remember_key.setEnabled(can_store_key)
+        api_layout.addWidget(self.remember_key)
+        self.clear_key_button = button("清除本机保存的 API Key", self.clear_saved_key)
+        self.clear_key_button.setEnabled(self.c.api_key_saved)
+        api_layout.addWidget(self.clear_key_button)
+        api_layout.addWidget(label("启用后，会把最近 16 条对话和最多 12 条备注发送给所填服务；不发送照片、录音或屏幕。", "muted", True))
+        api_layout.addWidget(label("DeepSeek 官方注册与密钥：<a href='https://platform.deepseek.com/api_keys'>platform.deepseek.com/api_keys</a>。", "muted", True))
+        collapsible("API 连接", api_content, expanded=False)
+
+        search_content = QFrame()
+        search_content.setObjectName("card")
+        search_layout = QVBoxLayout(search_content)
+        search_layout.setContentsMargins(14, 12, 14, 12)
+        search_layout.setSpacing(8)
         self.search_provider = QComboBox()
         for provider, title in (("deepseek_native", "DeepSeek 原生联网搜索（复用上方 Key）"),
                                 ("auto", "自动（旧 Brave Key→Brave；无 Key→DDG 摘要）"),
@@ -567,35 +635,35 @@ class HomeWindow(QWidget):
         provider_index = self.search_provider.findData(self.c.search_provider)
         self.search_provider.setCurrentIndex(max(0, provider_index))
         self.search_provider.currentIndexChanged.connect(self._search_provider_changed)
-        form.addRow("联网搜索服务", self.search_provider)
         self.search_endpoint = QLineEdit(self.c.search_endpoint)
         self.search_endpoint.setPlaceholderText("仅 SearXNG：例如 https://你的实例/search")
-        form.addRow("SearXNG 地址", self.search_endpoint)
         self.search_key = QLineEdit()
         self.search_key.setEchoMode(QLineEdit.EchoMode.Password)
+        search_layout.addWidget(field("联网搜索服务", self.search_provider))
+        search_layout.addWidget(field("SearXNG 地址", self.search_endpoint, "仅在选择自托管 SearXNG 时使用。"))
+        search_layout.addWidget(field("联网搜索 Key", self.search_key))
+        self.remember_search_key = QCheckBox("使用 Windows 账户加密保存联网搜索 Key")
+        self.remember_search_key.setChecked(self.c.search_api_key_saved)
+        self.remember_search_key.setEnabled(secure_store_available())
+        search_layout.addWidget(self.remember_search_key)
+        self.clear_search_key_button = button("清除本机保存的联网搜索 Key", self.clear_saved_search_key)
+        self.clear_search_key_button.setEnabled(self.c.search_api_key_saved)
+        search_layout.addWidget(self.clear_search_key_button)
+        search_layout.addWidget(label("DeepSeek 原生搜索最多 3 次服务端检索，只显示真实来源；结果不会写进后续模型历史。", "muted", True))
         self._search_provider_changed()
-        form.addRow("联网搜索 Key", self.search_key)
-        layout.addLayout(form)
-        model_actions = QHBoxLayout()
-        self.refresh_models_button = button("从当前 API 刷新模型", self.c.refresh_models)
-        model_actions.addWidget(self.refresh_models_button)
-        self.models_hint = label("可直接手填自定义模型；刷新不会覆盖当前选择。", "muted", True)
-        model_actions.addWidget(self.models_hint, 1)
-        layout.addLayout(model_actions)
-        self.cloud = QCheckBox("启用 API 自由聊天")
-        self.cloud.setChecked(config.get("enabled", False))
-        layout.addWidget(self.cloud)
-        self.agent_enabled = QCheckBox("允许 Nova 使用受限电脑工具（只响应明确请求）")
-        self.agent_enabled.setChecked(config.get("agent_enabled", True))
-        layout.addWidget(self.agent_enabled)
+        collapsible("联网搜索", search_content, expanded=False)
+
+        agent_content = QFrame()
+        agent_content.setObjectName("card")
+        agent_layout = QVBoxLayout(agent_content)
+        agent_layout.setContentsMargins(14, 12, 14, 12)
+        agent_layout.setSpacing(6)
         self.thinking = QCheckBox("手动启用 DeepSeek Thinking（关闭自动路由后生效；工具 Agent 仍使用安全的非 Thinking 回合）")
         self.thinking.setChecked(bool(config.get("thinking", False)))
-        layout.addWidget(self.thinking)
+        agent_layout.addWidget(self.thinking)
         self.auto_route = QCheckBox("自动选择轻量聊天、深度分析或受限工具（本地判断，不额外调用模型）")
-        # Existing users who explicitly enabled thinking keep that advanced
-        # preference; new configurations use the cheaper local router.
         self.auto_route.setChecked(bool(config.get("auto_route", not config.get("thinking", False))))
-        layout.addWidget(self.auto_route)
+        agent_layout.addWidget(self.auto_route)
         effort_row = QHBoxLayout()
         effort_row.addWidget(label("Thinking 强度", "muted"))
         self.reasoning_effort = QComboBox()
@@ -604,35 +672,12 @@ class HomeWindow(QWidget):
         self.reasoning_effort.setCurrentText(effort if effort in {"low", "high", "max"} else "high")
         effort_row.addWidget(self.reasoning_effort)
         effort_row.addStretch()
-        layout.addLayout(effort_row)
-        self.remember_key = QCheckBox("使用 Windows 账户加密保存 API Key")
-        can_store_key = secure_store_available()
-        # A typed key should survive restart by default.  The previous default
-        # was unchecked whenever no key had been saved yet, which silently made
-        # a first successful setup session-only.  Keep an explicit opt-out in
-        # settings without ever storing the secret itself in SQLite.
-        remember_default = bool(self.c.service.setting("remember_cloud_credential", can_store_key))
-        self.remember_key.setChecked(self.c.api_key_saved or remember_default)
-        self.remember_key.setEnabled(can_store_key)
-        layout.addWidget(self.remember_key)
-        self.remember_search_key = QCheckBox("使用 Windows 账户加密保存联网搜索 Key")
-        self.remember_search_key.setChecked(self.c.search_api_key_saved)
-        self.remember_search_key.setEnabled(secure_store_available())
-        layout.addWidget(self.remember_search_key)
-        layout.addWidget(label("启用后，会把最近 16 条对话和最多 12 条备注发送给所填服务；不发送照片、录音或屏幕。", "muted", True))
-        layout.addWidget(label("DeepSeek 官方注册与密钥：<a href='https://platform.deepseek.com/api_keys'>platform.deepseek.com/api_keys</a>；Tavily 注册：<a href='https://app.tavily.com'>app.tavily.com</a>；Brave Key：<a href='https://api-dashboard.search.brave.com/app/keys'>Brave API Keys</a>。", "muted", True))
-        layout.addWidget(label("DeepSeek 原生搜索复用上方 Key：一次明确搜索最多 3 次服务端检索、只显示来源与引文，不执行网页文字；结果仅本次可见，不写进后续模型历史。自动/无 Key 只提供 DuckDuckGo 即时摘要；其他 provider 的 Key 不会交叉发送。", "muted", True))
-        self.on_top = QCheckBox("桌宠保持置顶")
-        self.on_top.setChecked(self.c.service.setting("on_top", True))
-        layout.addWidget(self.on_top)
+        agent_layout.addLayout(effort_row)
+        agent_layout.addWidget(label("模型请求失败、联网失败或工具受限时，Nova 会回到空闲并说明原因。", "muted", True))
+        collapsible("Agent 高级设置", agent_content, expanded=False)
+
         layout.addWidget(button("应用设置", self.apply_settings, True))
         layout.addWidget(button("发送一句问候，测试连接", self.test_model))
-        self.clear_key_button = button("清除本机保存的 API Key", self.clear_saved_key)
-        self.clear_key_button.setEnabled(self.c.api_key_saved)
-        layout.addWidget(self.clear_key_button)
-        self.clear_search_key_button = button("清除本机保存的联网搜索 Key", self.clear_saved_search_key)
-        self.clear_search_key_button.setEnabled(self.c.search_api_key_saved)
-        layout.addWidget(self.clear_search_key_button)
         key_hint = "已启用 Windows 用户加密保存。留空会保留当前密钥；如需删除请点‘清除’。" if self.c.api_key_saved else "新输入的密钥默认使用 Windows 用户加密保存；取消勾选才只保留本次运行。也可从 COCO_API_KEY 或 DEEPSEEK_API_KEY 环境变量读取。"
         if self.c.api_key_store_error:
             key_hint = "本机加密密钥读取失败，请重新输入；不会显示或记录原密钥。"
@@ -644,7 +689,7 @@ class HomeWindow(QWidget):
         scroll = QScrollArea()
         scroll.setWidgetResizable(True)
         scroll.setWidget(page)
-        self.tabs.addTab(scroll, "设置")
+        self.tabs.addTab(scroll, "模型与联网")
 
     def _search_provider_changed(self):
         if not hasattr(self, "search_key"):
@@ -1164,6 +1209,7 @@ class Controller(QObject):
             active_rule = STATE_RULES.get(self.active_scene, scene_rule(self.active_scene))
             priority = 10 if source == 'random' else 75
             if ((not active_rule.interruptible and priority <= active_rule.priority)
+                    or (source in {'user', 'pointer'} and active_rule.priority >= 80)
                     or (source == 'random' and priority <= active_rule.priority)):
                 return False
         self.active_scene = state

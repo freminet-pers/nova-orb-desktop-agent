@@ -5,6 +5,7 @@
       "set_state",
       "sync_state",
       "enter",
+      "handoff_enter",
       "react",
       "gaze",
       "clear_gaze",
@@ -18,7 +19,8 @@
       "gaze",
       "clearGaze",
       "dragRelease",
-      "enter"
+      "enter",
+      "handoff_enter"
     ],
     "diagnostic_methods": [
       "snapshot",
